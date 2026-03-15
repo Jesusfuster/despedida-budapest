@@ -1037,7 +1037,8 @@ function loadUnlocksFromFirebase() {
   if(!firebase||!firebase.database) return;
   firebase.database().ref('unlocks').on('value',snap=>{
     const data=snap.val(); _manualUnlocks.clear();
-    if(Array.isArray(data)) data.forEach(id=>_manualUnlocks.add(id));
+    if(data && typeof data==='object') Object.keys(data).forEach(id=>_manualUnlocks.add(id));
+    else if(Array.isArray(data)) data.forEach(id=>_manualUnlocks.add(id));
     renderPlan();
   });
 }
