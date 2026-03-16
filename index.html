@@ -1363,8 +1363,8 @@ function renderInfo() {
     <!-- PRUEBAS Y PREGUNTAS -->
     <div class="info-card">
       <div class="info-card-title">🏆 Pruebas y Preguntas</div>
-      <button class="info-btn" onclick="openNotionModal('https://reflective-astrodon-6f0.notion.site/PRUEBAS-2a19134195128199baaac09b591bd3fa','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
-      <button class="info-btn" onclick="openNotionModal('https://reflective-astrodon-6f0.notion.site/PREGUNTAS-1-325913419512802286aaea4556803860','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
+      <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
+      <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
     </div>
 
     <!-- MAPA -->
@@ -1669,23 +1669,97 @@ function savePlanModal() {
 // ═══════════════════════════════════════════════
 // MODAL NOTION (iframe interno)
 // ═══════════════════════════════════════════════
-function openNotionModal(url, title) {
+function openNotionModal(type, title) {
   let m = document.getElementById('notion-modal');
   if (!m) {
     m = document.createElement('div');
     m.id = 'notion-modal';
     m.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:var(--bg)';
     m.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0">
         <button onclick="document.getElementById('notion-modal').style.display='none'" style="background:none;border:none;color:var(--text);font-size:1.3rem;cursor:pointer;padding:0">✕</button>
         <span id="notion-modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--accent2)"></span>
       </div>
-      <iframe id="notion-iframe" src="" style="flex:1;border:none;width:100%;background:#fff"></iframe>`;
+      <div id="notion-modal-body" style="flex:1;overflow-y:auto;padding:14px 12px 40px"></div>`;
     document.body.appendChild(m);
   }
   document.getElementById('notion-modal-title').textContent = title;
-  document.getElementById('notion-iframe').src = url;
+  const body = document.getElementById('notion-modal-body');
+  if (type === 'pruebas') body.innerHTML = _pruebas_html();
+  else body.innerHTML = _preguntas_html();
   m.style.display = 'flex';
+}
+
+function _pruebas_html() {
+  const pruebas = [
+    {n:'1',e:'✈️', t:'Aeropuerto — Vender o morir', d:'Jor y Rafa venden un producto que os define (plátanos y latas de atún) como si vuestra vida dependiera de ello. El primero que consiga 3€ gana. 🏆 Ha ganado Rafa'},
+    {n:'2',e:'💃', t:'Batalla de baile', d:'Suena un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota. 🏆 Ha ganado Jor'},
+    {n:'3',e:'🤝', t:'Bienvenidas a la ONG', d:'Conseguid 2 solicitudes nuevas de amistad de 2 chicas. 🏆 Ha ganado Jorge'},
+    {n:'4',e:'📸', t:'Los más fotogénicos', d:'Foto vuestra con 1 morena, 1 rubia, 1 pelirroja y 1 africana.'},
+    {n:'5',e:'🎙️', t:'Orgullo nacional', d:'Narra el gol de Iniesta en el Mundial / gol de Mbappé o un ensayo para ganar el Six Nations.'},
+    {n:'6',e:'📱', t:'Ponte a la moda', d:'Graba un TikTok con un grupo de gente que veas por allí.'},
+    {n:'7',e:'🥃', t:'¿Agua o tequila?', d:'¿Quién es mejor detective? Adivina si estamos bebiendo agua o tequila. No puedes fallar o beberás tú también.'},
+    {n:'8',e:'🎭', t:'¿Quién soy?', d:'Un novio tiene que imitar a alguien. Si el otro no lo adivina, tienen que beber.'},
+    {n:'9',e:'💸', t:'El ofertitas', d:'Conseguid algo (cervezas, chupitos…) por menos precio del valor de venta. Si no, chupito.'},
+    {n:'10',e:'🇨🇿', t:'Checa tu checo', d:'En el bar, los novios deben pedir una ronda de cervezas en checo sin ayuda de nadie. Si fallan, brindis obligatorio y shot.'},
+    {n:'11',e:'🍺', t:'Test de cervezas', d:'Cata a ciegas de cervezas locales. Adivina el tipo o nombre. Si no acierta, castigo. Puntos conjuntos.'},
+    {n:'12',e:'🤕', t:'Finge la lesión', d:'Se les da un abanico de lesiones (esguince, tirón, fractura…). Cuando el grupo lo decida, tendrá que fingirla y exagerarla hasta que alguien le atienda.'},
+    {n:'13',e:'🏉', t:'Rugby en público', d:'Cartas con frases de rugby. Cuando el grupo lo decida, representar la acción en público: "Tackle him", "ENSAYO", "crouch bind set"…'},
+    {n:'14',e:'🌍', t:'Encuentra al compatriota', d:'Cada novio debe encontrar a alguien de su país (un francés y un dominicano) y convencerlos de cantar su himno nacional en la calle.'},
+    {n:'15',e:'🛍️', t:'Compra el mejor regalo', d:'Se le dan 200Kc. Comprad el souvenir más tripeador. El grupo vota. El perdedor tiene castigo.'},
+    {n:'16',e:'👮', t:'Foto con policía', d:'Sacarse una foto con un policía checo.'},
+    {n:'17',e:'🗣️', t:'Lección de idiomas', d:'Conseguir que un local os enseñe una palabra en checo.'},
+    {n:'18',e:'🍻', t:'Pivo!', d:'Encontrar un lugar con la palabra "pivo" (cerveza) y brindar allí.'},
+    {n:'19',e:'💋', t:'El beso del desconocido', d:'Hacer que un desconocido os dé un beso en la mejilla.'},
+    {n:'20',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'Si pasáis cerca de otro barco de turistas, gritad un saludo pirata. Si os responden: 5 del grupo beben media cerveza. Si os ignoran: bebéis los novios.'},
+  ];
+  return '<div style="display:flex;flex-direction:column;gap:10px">' +
+    pruebas.map(p=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:1.3rem">${p.e}</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent2);letter-spacing:.06em">${p.n}. ${p.t}</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--text);line-height:1.5">${p.d}</div>
+      </div>`).join('') + '</div>';
+}
+
+function _preguntas_html() {
+  const qs = [
+    {q:'¿Quién fue el primer novio/a?', a1:'Paula: Joaquín Hens (Rafa dirá que él 😂)', a2:'Teresa: Jose Mena de Estepona'},
+    {q:'¿Cuál es su comida favorita?', a1:'Paula: Sushi', a2:'Teresa: Espaguetis con tomate Orlando y salchichas Frankfurt Campofrío'},
+    {q:'¿Qué manía tuya no le gusta?', a1:'Paula: Que siempre tiene la razón / sabelotodo / que sea suavón', a2:'Teresa: Que aliñe las comidas con el multiusos, que se acueste y apague la luz, que pase la aspiradora 80 veces al día'},
+    {q:'¿Cuál es su mayor miedo?', a1:'Paula: Dormir sola y que entren a robar', a2:'Teresa: Que suene Manolo García en cualquier momento'},
+    {q:'¿Dónde fue vuestro primer beso?', a1:'Paula: En su casa de Estepona', a2:'Teresa: En el baño de casa de Yisus, en el sofalito detrás de la puerta. Todo muy romántico 😂'},
+    {q:'¿Qué excusa pone cuando no quiere tener sexo?', a1:'Paula: Que está cansada. Aunque no suele haber excusas 🤪', a2:'Teresa: Que no y punto jjjj no zé'},
+    {q:'¿Cuál es su película favorita?', a1:'Paula — De Rafa: Los Chicos del Coro o El Padrino. De Paula: Lo Imposible o El Diario de Noah', a2:'Teresa — La suya: La Vida es Bella. De Jor: Gladiator'},
+    {q:'¿Quién dijo "te quiero" primero?', a1:'Paula: Obviamente Fali', a2:'Teresa: Él seguro, que estaba colaíto por mis rizos'},
+    {q:'¿Qué cosa haces que más la enfada?', a1:'Paula: Ser suavón al explicar o guardar comida que nunca se come', a2:'Teresa: Llamar por teléfono y ponerse a hablar con quien pase por la calle'},
+    {q:'Si pudiera cambiar una cosa de ti, ¿qué sería?', a1:'Paula: Que baje los niveles de exageración', a2:'Teresa: Que no durmiera con la banda sonora de ruidos de sus dientes y respiración egoísta'},
+    {q:'¿Qué es lo que más le gusta de ti?', a1:'Paula: Que es muy generoso, siempre dispuesto, estufita portátil, siempre da la mejor parte de las comidas', a2:'Teresa: Personalidad: todo. Cuerpo: lo suavito que tiene los empeines 😂'},
+    {q:'¿Cuál es su playa favorita?', a1:'Paula: Cabo Pino en Marbella / Holbox México (chupito de tequila si acierta)', a2:'Teresa: La Rada, enfrente de mi casa, llena de marujas'},
+    {q:'¿Cuál ha sido el peor regalo que le has hecho?', a1:'Paula: Un bolso de Maje… 😬', a2:'Teresa: Un puzzle de 1000 piezas (lo terminarán nuestros hijos)'},
+    {q:'¿Cuál crees que es su próxima compra compulsiva?', a1:'Paula: Solo se gasta en restaurantes / ropa sin sentido del Decatlón', a2:'Teresa: Alguna tontería para la moto o algo que le meta en la cabeza Delpo'},
+    {q:'¿Qué os cocinaría en una cena romántica?', a1:'Paula: Cualquier cosa con arroz basmati o patatas + sriracha', a2:'Teresa: Arroz blanco, su especialidad'},
+    {q:'¿Destino favorito de viaje juntos (sin luna de miel)?', a1:'Paula: Volver a México o ir a Colombia', a2:'Teresa: Santo Domingo'},
+    {q:'¿Ya tienen nombre sus hijos?', a1:'Paula: Mateo (o Martín o Marco según el día) / niña: Bruna', a2:'Teresa: Niñas: Isabel y Carmen. Niños: Martín, Gonzalo'},
+    {q:'Si Tere/Paula se dedicara a otra cosa, ¿qué sería?', a1:'Paula — ella: matrona. Rafa: tener un restaurante', a2:'Teresa: decoración o diseño de interiores'},
+    {q:'¿Quién hace las paces primero en una discusión?', a1:'Paula: Depende, siempre hablando', a2:'Teresa: Jorr'},
+    {q:'¿Restaurante para la última cena?', a1:'Paula: Juanchos / Hundred / Kitchen 154 / Ugo Chan', a2:'Teresa: Hunter'},
+    {q:'¿De qué posición jugaba Rafa al rugby?', a1:'Paula: Ni idea…', a2:'Teresa: De portero 😂'},
+    {q:'¿Cuántas palas de pádel ha tenido Jor en 5 años?', a1:'Paula: 5', a2:'Teresa: 3 o 4…'},
+  ];
+  return '<div style="display:flex;flex-direction:column;gap:8px">' +
+    qs.map((q,i)=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:.06em;margin-bottom:8px">${i+1}. ${q.q}</div>
+        <div style="font-size:.75rem;padding:8px;background:rgba(30,111,255,.08);border-radius:8px;margin-bottom:6px;line-height:1.5">
+          <span style="color:var(--accent2);font-weight:700">RAFA/JOR dice: </span>${q.a1}
+        </div>
+        <div style="font-size:.75rem;padding:8px;background:rgba(255,215,0,.06);border-radius:8px;line-height:1.5">
+          <span style="color:var(--gold);font-weight:700">TERE/PAULA contesta: </span>${q.a2}
+        </div>
+      </div>`).join('') + '</div>';
 }
 
 // ═══════════════════════════════════════════════
