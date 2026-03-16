@@ -1180,6 +1180,61 @@ document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='E
 // ════════════════════════════════════════════════════════
 function buildPlan(){
   const D=(day,h,m)=>{m=m||0;const d=new Date(2026,2,19);d.setDate(d.getDate()+day);d.setHours(h,m,0,0);return d;};
+  // ─── PLANNING REAL BUDAPEST ───
+  return [
+    {id:'j0',day:'JUEVES 19',time:D(0,9,0),emoji:'\uD83D\uDC57',title:'Disfraz del dia',
+     desc:'Disfraz: Pocholo de policia, Juan y Arroyo de presos',
+     descS:'Sorpresa preparada para vosotros',loc:''},
+    {id:'j1',day:'JUEVES 19',time:D(0,9,0),emoji:'\u2708',title:'Llegadas aeropuerto',
+     desc:'Malaga 10:10: Julio,Kino,Jose,Jesus,Cabeza,Adrian,Pablo | Madrid 13:25: Luis | 14:05: Max | 20:45: Aynat | 23:10: Travol',
+     descS:'El grupo va llegando durante el dia',loc:'Aeropuerto Liszt Ferenc T2B'},
+    {id:'j2',day:'JUEVES 19',time:D(0,10,0),emoji:'\uD83D\uDEB6',title:'Paseo y Free Tour',
+     desc:'Aprovechamos para dar un paseo o free tour por Budapest antes de comer.',
+     descS:'Actividad de manana. Os esperamos en el centro!',loc:'Centro Budapest'},
+    {id:'j3',day:'JUEVES 19',time:D(0,13,0),emoji:'\uD83C\uDF7D',title:"Comida Hell's Kitchen",
+     desc:"Comida en Hell's Kitchen a las 13:00.",
+     descS:'Comida del grupo',loc:"Hell's Kitchen - Veres Palné u. 16"},
+    {id:'j4',day:'JUEVES 19',time:D(0,15,0),emoji:'\uD83C\uDFE8',title:'Check-in Apartamento',
+     desc:'Llegada team Marbella. Check-in rapido y a la calle. Ver direccion en pestana Info.',
+     descS:'Check-in en el apartamento. Direccion en Info',loc:'SWU Broadway - Csanyi u. 9-11'},
+    {id:'j5',day:'JUEVES 19',time:D(0,16,0),emoji:'\uD83C\uDFB3',title:'Bolera y Games',
+     desc:'Bolera y juegos frente al hotel 16:00-20:00. Incluido en pagos pre-viaje.',
+     descS:'Actividad de tarde incluida. Sorpresa...',loc:'Frente al hotel - Csanyi u.'},
+    {id:'j6',day:'JUEVES 19',time:D(0,20,30),emoji:'\uD83C\uDF77',title:'Cena Fuego',
+     desc:'Cena casual en FUEGO para ir cogiendo tono. Despues ruin bars y lo que surja.',
+     descS:'Cena en FUEGO. Noche de jueves',loc:'Fuego Restaurant Budapest'},
+    {id:'v0',day:'VIERNES 20',time:D(1,9,0),emoji:'\uD83D\uDC57',title:'Disfraz del dia',
+     desc:'Disfraz: Juan de cura, Arroyo y Pocholo de novias',
+     descS:'Sorpresa preparada para vosotros',loc:''},
+    {id:'v1',day:'VIERNES 20',time:D(1,14,30),emoji:'\uD83C\uDF7A',title:'Comida VAKVARJU + Barra libre',
+     desc:'Menu tradicional en VAKVARJU. Barra libre hasta las 17:30 (posibilidad +1h). Incluido. Ser puntuales!',
+     descS:'Comida especial con barra libre. Llegar puntuales!',loc:'Vakvarju - Paulay Ede u. 7'},
+    {id:'v2',day:'VIERNES 20',time:D(1,20,0),emoji:'\u26F5',title:'Party Boat Silverline Cruises',
+     desc:'Crucero open bar por el Danubio. Vistas al Parlamento y Castillo iluminados. 20:00 en el muelle. Incluido.',
+     descS:'Actividad incluida. Sorpresa con vistas desde el agua',loc:'Silverline Cruises - Vigado ter 3'},
+    {id:'v3',day:'VIERNES 20',time:D(1,22,30),emoji:'\uD83C\uDF2E',title:'Cena Karavan Market',
+     desc:'Cena informal en Karavan Market zona ruin bars. Street food.',
+     descS:'Cena en la zona de marcha',loc:'Karavan Market - Kazinczy u. 18'},
+    {id:'s0',day:'SABADO 21',time:D(2,9,0),emoji:'\uD83D\uDC57',title:'Disfraz del dia',
+     desc:'Disfraz: Camisetas seleccion Hungara de futbol. Los tres iguales.',
+     descS:'Disfraz del dia. Spoiler: muy Hungarian',loc:''},
+    {id:'s1',day:'SABADO 21',time:D(2,12,0),emoji:'\uD83D\uDED2',title:'Desayuno Time Out Market',
+     desc:'Comida segun vayamos despertando en el mercado Time Out.',
+     descS:'Brunch en el mercado',loc:'Time Out Market - Vamhaz krt. 1-3'},
+    {id:'s2',day:'SABADO 21',time:D(2,16,30),emoji:'\u26F3',title:'Minigolf Indoor Pirate',
+     desc:'Minigolf indoor pirata 16:30. Incluido. A 5 minutos hay Pizza Rave toda la tarde (free entry).',
+     descS:'Actividad de tarde incluida. Minigolf',loc:'Indoor Pirate Minigolf Budapest'},
+    {id:'s3',day:'SABADO 21',time:D(2,21,0),emoji:'\uD83C\uDF89',title:'Noche libre - Ruin Bars y Clubs',
+     desc:'Improvisemos segun aguanten los cuerpos. RUIN BARS: Szimpla, Doboz, Instant Fogas, Mazel Tov, Csendes Vintage. CLUBS: Aether (techno), Toldi Klub, Otkert, Dojo, A38. BONUS: McDonalds Nyugati - fiesta hasta las 4am.',
+     descS:'Noche libre. Clubs en pestana Info',loc:'Szimpla Kert - Kazinczy u. 14'},
+    {id:'d1',day:'DOMINGO 22',time:D(3,10,0),emoji:'\u2600',title:'Desayuno + Despedida',
+     desc:'Desayuno en el hotel. Fotos comprometedoras. Borrar algo = pagar ronda. VUELOS: 11:25 Max, 13:25 Travol/Ale/Jor/Fer, 14:10 grupo, 14:40 Aynat, 14:50 grupo Malaga',
+     descS:'Ultimo desayuno juntos. Despues... libertad',loc:'SWU Broadway - Csanyi u. 9-11'},
+  ];
+}
+
+function buildPlan_OLD_DELETE(){
+  const D=(day,h,m)=>{m=m||0;const d=new Date(2026,2,19);d.setDate(d.getDate()+day);d.setHours(h,m,0,0);return d;};
   return [
     // ─── JUEVES 19 ───
     {id:'j0',day:'JUEVES 19',time:D(0,9,0),emoji:'👗',title:'Disfraz del día',
