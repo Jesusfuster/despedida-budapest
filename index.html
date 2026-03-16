@@ -1233,7 +1233,9 @@ function buildPlan(){
   ];
 }
 
-function buildPlan_OLD_DELETE(){
+function buildPlan_OLD_DELETE_SKIP(){
+  // eliminado
+  return [];
   const D=(day,h,m)=>{m=m||0;const d=new Date(2026,2,19);d.setDate(d.getDate()+day);d.setHours(h,m,0,0);return d;};
   return [
     // ─── JUEVES 19 ───
