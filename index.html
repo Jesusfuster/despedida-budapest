@@ -909,6 +909,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
       <div class="h-sub" id="hdr-sub" onclick="resetIdentity()">BUDAPEST 🇭🇺 · toca para cambiar</div>
     </div>
     <div class="h-right">
+      <button id="btn-welcome" onclick="openWelcome()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0 6px;opacity:.7" title="Bienvenida">📜</button>
       <span class="clock" id="hdr-clock">--:--</span>
       <div class="h-user">
         <div class="dot dot-orange" id="conn-dot"></div>
@@ -1344,7 +1345,7 @@ function renderInfo() {
       <div class="info-row"><span class="info-label">Dirección</span><span class="info-val">Csányi u. 9-11, 1077 Budapest</span></div>
       <div class="info-row"><span class="info-label">Código Mié</span><span class="info-val mono">6K35Y3B</span></div>
       <div class="info-row"><span class="info-label">Código Jue</span><span class="info-val mono">6k35VHPH</span></div>
-      <a class="info-btn" href="https://maps.app.goo.gl/xHYZ5DEpkDGh3Sbd7" target="_blank">📍 Ver en Google Maps</a>
+      <a class="info-btn" href="https://www.google.com/maps/search/?api=1&query=Csányi+u.+9-11,+1077+Budapest" target="_blank">📍 Cómo llegar al apartamento</a>
     </div>
 
     <!-- TIPO DE CAMBIO -->
@@ -1362,8 +1363,8 @@ function renderInfo() {
     <!-- PRUEBAS Y PREGUNTAS -->
     <div class="info-card">
       <div class="info-card-title">🏆 Pruebas y Preguntas</div>
-      <a class="info-btn" href="https://reflective-astrodon-6f0.notion.site/PRUEBAS-2a19134195128199baaac09b591bd3fa" target="_blank">⚡ Ver PRUEBAS</a>
-      <a class="info-btn" href="https://reflective-astrodon-6f0.notion.site/PREGUNTAS-1-325913419512802286aaea4556803860" target="_blank" style="margin-top:8px">❓ Ver PREGUNTAS</a>
+      <button class="info-btn" onclick="openNotionModal('https://reflective-astrodon-6f0.notion.site/PRUEBAS-2a19134195128199baaac09b591bd3fa','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
+      <button class="info-btn" onclick="openNotionModal('https://reflective-astrodon-6f0.notion.site/PREGUNTAS-1-325913419512802286aaea4556803860','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
     </div>
 
     <!-- MAPA -->
@@ -1378,7 +1379,7 @@ function renderInfo() {
 }
 
 function initApp(){
-  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo();
+  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
   startGPS(); renderPlan(); initFirebase();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
@@ -1665,6 +1666,66 @@ function savePlanModal() {
   }
 }
 
+// ═══════════════════════════════════════════════
+// MODAL NOTION (iframe interno)
+// ═══════════════════════════════════════════════
+function openNotionModal(url, title) {
+  let m = document.getElementById('notion-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'notion-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:var(--bg)';
+    m.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)">
+        <button onclick="document.getElementById('notion-modal').style.display='none'" style="background:none;border:none;color:var(--text);font-size:1.3rem;cursor:pointer;padding:0">✕</button>
+        <span id="notion-modal-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--accent2)"></span>
+      </div>
+      <iframe id="notion-iframe" src="" style="flex:1;border:none;width:100%;background:#fff"></iframe>`;
+    document.body.appendChild(m);
+  }
+  document.getElementById('notion-modal-title').textContent = title;
+  document.getElementById('notion-iframe').src = url;
+  m.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════
+// POPUP BIENVENIDA
+// ═══════════════════════════════════════════════
+function openWelcome() {
+  document.getElementById('welcome-modal').style.display = 'flex';
+}
+function closeWelcome() {
+  localStorage.setItem('despedida_welcome_seen', '1');
+  document.getElementById('welcome-modal').style.display = 'none';
+}
+function maybeShowWelcome() {
+  if (!localStorage.getItem('despedida_welcome_seen')) {
+    setTimeout(() => document.getElementById('welcome-modal').style.display = 'flex', 800);
+  }
+}
+
 </script>
+
+<!-- MODAL BIENVENIDA -->
+<div id="welcome-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:360px;width:100%;padding:28px 24px;text-align:center;position:relative">
+    <div style="font-size:2.5rem;margin-bottom:8px">🇭🇺</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.1em;background:linear-gradient(90deg,#4da3ff,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px">BIENVENIDOS</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.2em;color:var(--muted);margin-bottom:20px">A BUDAPUTES</div>
+    <div style="font-size:.82rem;color:var(--text);line-height:1.7;margin-bottom:20px;text-align:left">
+      Un año más, nos volvemos a ver las caras.<br>
+      Volvemos a la Europa de grandes imperios para demostrar que <strong style="color:var(--gold)">el más grande es el nuestro.</strong><br><br>
+      Esperemos estar a la altura.<br><br>
+      <span style="color:var(--muted);font-size:.72rem">— Atte. qehlo on tour S.L</span>
+    </div>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:16px;padding:10px;background:var(--bg);border-radius:8px;line-height:1.6">
+      📍 <strong>SWU Broadway</strong> · Csányi u. 9-11, 1077 Budapest<br>
+      🔑 Código Mié: <span style="color:var(--gold);font-family:monospace">6K35Y3B</span><br>
+      🔑 Código Jue: <span style="color:var(--gold);font-family:monospace">6k35VHPH</span>
+    </div>
+    <button onclick="closeWelcome()" style="width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">¡VAMOS! 🔥</button>
+  </div>
+</div>
+
 </body>
 </html>
