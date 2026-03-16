@@ -1380,7 +1380,7 @@ function renderInfo() {
 }
 
 function initApp(){
-  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
+  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome(); initLocksFromFirebase(); loadNotionEditsFromFirebase();
   startGPS(); renderPlan(); initFirebase();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
@@ -1668,8 +1668,139 @@ function savePlanModal() {
 }
 
 // ═══════════════════════════════════════════════
-// MODAL NOTION (iframe interno)
+// LOCK/EDIT PRUEBAS Y PREGUNTAS
 // ═══════════════════════════════════════════════
+window._lockedPruebas = new Set();
+window._lockedPreguntas = new Set();
+
+function initLocksFromFirebase() {
+  if(!firebase||!firebase.database) return;
+  firebase.database().ref('locks/pruebas').on('value', snap => {
+    window._lockedPruebas = new Set();
+    const d = snap.val();
+    if(d && typeof d === 'object') Object.keys(d).forEach(k => window._lockedPruebas.add(k));
+    // Refrescar si el modal está abierto
+    const m = document.getElementById('notion-modal');
+    if(m && m.style.display !== 'none') {
+      const title = document.getElementById('notion-modal-title').textContent;
+      if(title.includes('PRUEBA')) document.getElementById('notion-modal-body').innerHTML = _pruebas_html();
+    }
+  });
+  firebase.database().ref('locks/preguntas').on('value', snap => {
+    window._lockedPreguntas = new Set();
+    const d = snap.val();
+    if(d && typeof d === 'object') Object.keys(d).forEach(k => window._lockedPreguntas.add(k));
+    const m = document.getElementById('notion-modal');
+    if(m && m.style.display !== 'none') {
+      const title = document.getElementById('notion-modal-title').textContent;
+      if(title.includes('PREGUNTA')) document.getElementById('notion-modal-body').innerHTML = _preguntas_html();
+    }
+  });
+}
+
+function toggleLockItem(type, id) {
+  if(!isAdmin) return;
+  const set = type === 'prueba' ? window._lockedPruebas : window._lockedPreguntas;
+  const ref = type === 'prueba' ? 'locks/pruebas' : 'locks/preguntas';
+  if(set.has(id)) {
+    set.delete(id);
+    if(firebase&&firebase.database) firebase.database().ref(ref+'/'+id).remove();
+  } else {
+    set.add(id);
+    if(firebase&&firebase.database) firebase.database().ref(ref+'/'+id).set(true);
+  }
+  // Re-render
+  const body = document.getElementById('notion-modal-body');
+  if(body) body.innerHTML = type === 'prueba' ? _pruebas_html() : _preguntas_html();
+}
+
+// Modal de edición inline para pruebas/preguntas
+let _editType = null, _editId = null, _editData = null;
+function editNotionItem(type, id) {
+  if(!isAdmin) return;
+  _editType = type; _editId = id;
+  // Buscar el item actual
+  if(type === 'prueba') {
+    const pruebas = _getPruebasData();
+    _editData = pruebas.find(p=>p.n===id) || {};
+  } else {
+    const qs = _getPreguntasData();
+    _editData = qs[parseInt(id)-1] || {};
+  }
+  // Crear modal de edición
+  let m = document.getElementById('edit-notion-modal');
+  if(!m) {
+    m = document.createElement('div');
+    m.id = 'edit-notion-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;padding:0';
+    document.body.appendChild(m);
+  }
+  const fields = type === 'prueba' ? `
+    <div style="margin-bottom:12px">
+      <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">TÍTULO</label>
+      <input id="en-title" value="${(_editData.t||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">DESCRIPCIÓN</label>
+      <textarea id="en-desc" rows="4" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;box-sizing:border-box;margin-top:4px;resize:vertical">${_editData.d||''}</textarea>
+    </div>` : `
+    <div style="margin-bottom:12px">
+      <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">PREGUNTA</label>
+      <input id="en-q" value="${(_editData.q||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em;color:var(--accent2)">RAFA/JOR dice</label>
+      <textarea id="en-a1" rows="3" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:.78rem;box-sizing:border-box;margin-top:4px;resize:vertical">${_editData.a1||''}</textarea>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:.7rem;color:var(--gold);letter-spacing:.1em">TERE/PAULA contesta</label>
+      <textarea id="en-a2" rows="3" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--gold);border-radius:8px;color:var(--text);font-size:.78rem;box-sizing:border-box;margin-top:4px;resize:vertical">${_editData.a2||''}</textarea>
+    </div>`;
+  m.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;margin-bottom:16px">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent2);letter-spacing:.08em;flex:1">EDITAR ${type==='prueba'?'PRUEBA':'PREGUNTA'} ${id}</span>
+        <button onclick="document.getElementById('edit-notion-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+      </div>
+      ${fields}
+      <button onclick="saveNotionEdit()" style="width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">💾 GUARDAR</button>
+    </div>`;
+  m.style.display = 'flex';
+}
+
+function saveNotionEdit() {
+  if(!_editType||!_editId) return;
+  const ref = _editType==='prueba' ? 'edits/pruebas/'+_editId : 'edits/preguntas/'+_editId;
+  let data = {};
+  if(_editType==='prueba') {
+    data = { t: document.getElementById('en-title').value, d: document.getElementById('en-desc').value };
+  } else {
+    data = { q: document.getElementById('en-q').value, a1: document.getElementById('en-a1').value, a2: document.getElementById('en-a2').value };
+  }
+  // Guardar en Firebase y local
+  window._notionEdits = window._notionEdits || {};
+  window._notionEdits[_editType+_editId] = data;
+  if(firebase&&firebase.database) firebase.database().ref(ref).set(data);
+  document.getElementById('edit-notion-modal').style.display = 'none';
+  // Re-render modal
+  const body = document.getElementById('notion-modal-body');
+  if(body) body.innerHTML = _editType==='prueba' ? _pruebas_html() : _preguntas_html();
+  toast('✅ Guardado');
+}
+
+function loadNotionEditsFromFirebase() {
+  if(!firebase||!firebase.database) return;
+  firebase.database().ref('edits').on('value', snap => {
+    const d = snap.val();
+    window._notionEdits = {};
+    if(d) {
+      if(d.pruebas) Object.entries(d.pruebas).forEach(([k,v]) => window._notionEdits['prueba'+k]=v);
+      if(d.preguntas) Object.entries(d.preguntas).forEach(([k,v]) => window._notionEdits['pregunta'+k]=v);
+    }
+  });
+}
+
+
 function openNotionModal(type, title) {
   let m = document.getElementById('notion-modal');
   if (!m) {
@@ -1691,8 +1822,8 @@ function openNotionModal(type, title) {
   m.style.display = 'flex';
 }
 
-function _pruebas_html() {
-  const pruebas = [
+function _getPruebasData() {
+  return [
     {n:'1',e:'✈️', t:'Aeropuerto — Vender o morir', d:'Jor y Rafa venden un producto que os define (plátanos y latas de atún) como si vuestra vida dependiera de ello. El primero que consiga 3€ gana. 🏆 Ha ganado Rafa'},
     {n:'2',e:'💃', t:'Batalla de baile', d:'Suena un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota. 🏆 Ha ganado Jor'},
     {n:'3',e:'🤝', t:'Bienvenidas a la ONG', d:'Conseguid 2 solicitudes nuevas de amistad de 2 chicas. 🏆 Ha ganado Jorge'},
@@ -1713,20 +1844,14 @@ function _pruebas_html() {
     {n:'18',e:'🍻', t:'Pivo!', d:'Encontrar un lugar con la palabra "pivo" (cerveza) y brindar allí.'},
     {n:'19',e:'💋', t:'El beso del desconocido', d:'Hacer que un desconocido os dé un beso en la mejilla.'},
     {n:'20',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'Si pasáis cerca de otro barco de turistas, gritad un saludo pirata. Si os responden: 5 del grupo beben media cerveza. Si os ignoran: bebéis los novios.'},
-  ];
-  return '<div style="display:flex;flex-direction:column;gap:10px">' +
-    pruebas.map(p=>`
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:1.3rem">${p.e}</span>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent2);letter-spacing:.06em">${p.n}. ${p.t}</span>
-        </div>
-        <div style="font-size:.78rem;color:var(--text);line-height:1.5">${p.d}</div>
-      </div>`).join('') + '</div>';
+  ].map(p => {
+    const edit = window._notionEdits && window._notionEdits['prueba'+p.n];
+    return edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
+  });
 }
 
-function _preguntas_html() {
-  const qs = [
+function _getPreguntasData() {
+  return [
     {q:'¿Quién fue el primer novio/a?', a1:'Paula: Joaquín Hens (Rafa dirá que él 😂)', a2:'Teresa: Jose Mena de Estepona'},
     {q:'¿Cuál es su comida favorita?', a1:'Paula: Sushi', a2:'Teresa: Espaguetis con tomate Orlando y salchichas Frankfurt Campofrío'},
     {q:'¿Qué manía tuya no le gusta?', a1:'Paula: Que siempre tiene la razón / sabelotodo / que sea suavón', a2:'Teresa: Que aliñe las comidas con el multiusos, que se acueste y apague la luz, que pase la aspiradora 80 veces al día'},
@@ -1749,18 +1874,60 @@ function _preguntas_html() {
     {q:'¿Restaurante para la última cena?', a1:'Paula: Juanchos / Hundred / Kitchen 154 / Ugo Chan', a2:'Teresa: Hunter'},
     {q:'¿De qué posición jugaba Rafa al rugby?', a1:'Paula: Ni idea…', a2:'Teresa: De portero 😂'},
     {q:'¿Cuántas palas de pádel ha tenido Jor en 5 años?', a1:'Paula: 5', a2:'Teresa: 3 o 4…'},
-  ];
+  ].map((q,i) => {
+    const edit = window._notionEdits && window._notionEdits['pregunta'+(i+1)];
+    return edit ? {...q, q: edit.q||q.q, a1: edit.a1||q.a1, a2: edit.a2||q.a2} : q;
+  });
+}
+function _pruebas_html() {
+  const pruebas = _getPruebasData();
+  return '<div style="display:flex;flex-direction:column;gap:10px">' +
+    pruebas.map(p=>{
+      const locked = window._lockedPruebas && window._lockedPruebas.has(p.n);
+      const adminBtns = isAdmin ? `
+        <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
+          <button onclick="editNotionItem('prueba','${p.n}')" style="background:rgba(30,111,255,.15);border:1px solid var(--accent);border-radius:8px;color:var(--accent2);font-size:.7rem;padding:4px 8px;cursor:pointer">✏️</button>
+          <button onclick="toggleLockItem('prueba','${p.n}')" style="background:${locked?'rgba(255,60,60,.15)':'rgba(255,215,0,.1)'};border:1px solid ${locked?'rgba(255,60,60,.4)':'rgba(255,215,0,.3)'};border-radius:8px;color:${locked?'#ff6b6b':'var(--gold)'};font-size:.7rem;padding:4px 8px;cursor:pointer">${locked?'🔓':'🔒'}</button>
+        </div>` : '';
+      return `<div style="background:var(--surface);border:1px solid ${locked?'rgba(255,60,60,.3)':'var(--border)'};border-radius:12px;padding:14px;opacity:${locked?'0.45':'1'}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${locked?'0':'6px'}">
+          <span style="font-size:1.3rem">${locked?'🔒':p.e}</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${locked?'var(--muted)':'var(--accent2)'};letter-spacing:.06em">${p.n}. ${locked&&!isAdmin?'???':p.t}</span>
+          ${adminBtns}
+        </div>
+        ${locked&&!isAdmin?'':` <div style="font-size:.78rem;color:var(--text);line-height:1.5">${p.d}</div>`}
+      </div>`;
+    }).join('') + '</div>';
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--accent2);letter-spacing:.06em">${p.n}. ${p.t}</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--text);line-height:1.5">${p.d}</div>
+      </div>`).join('') + '</div>';
+}
+
+function _preguntas_html() {
+  const qs = _getPreguntasData();
   return '<div style="display:flex;flex-direction:column;gap:8px">' +
-    qs.map((q,i)=>`
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:.06em;margin-bottom:8px">${i+1}. ${q.q}</div>
+    qs.map((q,i)=>{
+      const locked = window._lockedPreguntas && window._lockedPreguntas.has(String(i+1));
+      const adminBtns = isAdmin ? `
+        <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
+          <button onclick="editNotionItem('pregunta','${i+1}')" style="background:rgba(30,111,255,.15);border:1px solid var(--accent);border-radius:8px;color:var(--accent2);font-size:.7rem;padding:4px 8px;cursor:pointer">✏️</button>
+          <button onclick="toggleLockItem('pregunta','${i+1}')" style="background:${locked?'rgba(255,60,60,.15)':'rgba(255,215,0,.1)'};border:1px solid ${locked?'rgba(255,60,60,.4)':'rgba(255,215,0,.3)'};border-radius:8px;color:${locked?'#ff6b6b':'var(--gold)'};font-size:.7rem;padding:4px 8px;cursor:pointer">${locked?'🔓':'🔒'}</button>
+        </div>` : '';
+      return `<div style="background:var(--surface);border:1px solid ${locked?'rgba(255,60,60,.3)':'var(--border)'};border-radius:12px;padding:14px;opacity:${locked?'0.45':'1'}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:${locked?'0':'8px'}">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${locked?'var(--muted)':'var(--gold)'};letter-spacing:.06em;flex:1">${i+1}. ${locked&&!isAdmin?'???':q.q}</span>
+          ${adminBtns}
+        </div>
+        ${locked&&!isAdmin?'':` 
         <div style="font-size:.75rem;padding:8px;background:rgba(30,111,255,.08);border-radius:8px;margin-bottom:6px;line-height:1.5">
           <span style="color:var(--accent2);font-weight:700">RAFA/JOR dice: </span>${q.a1}
         </div>
         <div style="font-size:.75rem;padding:8px;background:rgba(255,215,0,.06);border-radius:8px;line-height:1.5">
           <span style="color:var(--gold);font-weight:700">TERE/PAULA contesta: </span>${q.a2}
-        </div>
-      </div>`).join('') + '</div>';
+        </div>`}
+      </div>`;
+    }).join('') + '</div>';
 }
 
 // ═══════════════════════════════════════════════
