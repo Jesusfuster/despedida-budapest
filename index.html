@@ -1179,17 +1179,15 @@ document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='E
 // PLANNING DATA
 // ════════════════════════════════════════════════════════
 function buildPlan(){
-  const D=(day,h,m=0)=>{const d=new Date(2026,2,19);d.setDate(d.getDate()+day);d.setHours(h,m,0,0);return d;};
+  const D=(day,h,m)=>{m=m||0;const d=new Date(2026,2,19);d.setDate(d.getDate()+day);d.setHours(h,m,0,0);return d;};
   return [
     // ─── JUEVES 19 ───
     {id:'j0',day:'JUEVES 19',time:D(0,9,0),emoji:'👗',title:'Disfraz del día',
      desc:'Disfraz del día: Pocholo vestido de policía · Juan y Arroyo de presos',
      descS:'Sorpresa preparada para vosotros 😈',loc:''},
 
-    {id:'j1',day:'JUEVES 19',time:D(0,9,0),emoji:'✈️',title:'Llegadas aeropuerto',
-     desc:'Malaga 10:10 → Julio, Kino, José, Jesús, Cabeza, Adrián, Pablo
-Madrid 13:25 → Luis · 14:05 → Max
-Madrid 20:45 → Aynat · 23:10 → Travol',
+    {id:'j1',day:'JUEVES 19',time:D(0,9,0),emoji:'\u2708',title:'Llegadas aeropuerto',
+     desc:'Malaga 10:10: Julio, Kino, Jose, Jesus, Cabeza, Adrian, Pablo | Madrid 13:25: Luis | 14:05: Max | 20:45: Aynat | 23:10: Travol',
      descS:'El grupo va llegando durante el día 🛬',loc:'Aeropuerto Liszt Ferenc · T2B'},
 
     {id:'j2',day:'JUEVES 19',time:D(0,10,0),emoji:'🚶',title:'Paseo / Free Tour ciudad',
@@ -1197,13 +1195,11 @@ Madrid 20:45 → Aynat · 23:10 → Travol',
      descS:'Actividad de mañana. ¡Os esperamos en el centro!',loc:'Centro Budapest'},
 
     {id:'j3',day:'JUEVES 19',time:D(0,13,0),emoji:'🍽️',title:'Comida Hells Kitchen',
-     desc:'Comida en Hells Kitchen a las 13:00.',
-     descS:'Comida del grupo 🍖',loc:"Hell's Kitchen · Veres Pálné u. 16"},
+     desc:"Comida en Hell's Kitchen a las 13:00.",
+     descS:'Comida del grupo',loc:"Hell's Kitchen - Veres Palné u. 16"},
 
     {id:'j4',day:'JUEVES 19',time:D(0,15,0),emoji:'🏨',title:'Check-in Hotel',
-     desc:'Llegada team Marbella. Check-in rápido y a la calle.
-📍 Dirección: SWU BROADWAY · Csányi u. 9-11, 1077 Budapest
-Código acceso Jue: 6k35VHPH',
+     desc:'Llegada team Marbella. Check-in rapido y a la calle. Direccion: SWU Broadway - Csanyi u. 9-11, 1077 Budapest. Codigo acceso Jue: 6k35VHPH',
      descS:'Check-in en el apartamento. Dirección en la pestaña Info 📍',loc:'SWU Broadway · Csányi u. 9-11'},
 
     {id:'j5',day:'JUEVES 19',time:D(0,16,0),emoji:'🎳',title:'Bolera & Games',
@@ -1245,22 +1241,12 @@ Código acceso Jue: 6k35VHPH',
      descS:'Actividad de tarde incluida. Minigolf con sorpresa ⛳',loc:'Indoor Pirate Minigolf · Budapest'},
 
     {id:'s3',day:'SÁBADO 21',time:D(2,21,0),emoji:'🎉',title:'Noche libre · Ruin Bars & Clubs',
-     desc:'Improvisemos según aguanten los cuerpos.
-
-RUIN BARS: Szimpla · Doboz · Instant Fogas · Mazel Tov · Csendes Vintage
-
-CLUBS: Aether (underground techno) · Toldi Klub · Instant Fogas · Otkert · Dojo · A38
-
-🍟 BONUS: McDonalds Nyugati - fiesta hasta las 4am los fines de semana',
+     desc:'Improvisemos segun aguanten los cuerpos. RUIN BARS: Szimpla, Doboz, Instant Fogas, Mazel Tov, Csendes Vintage. CLUBS: Aether (techno), Toldi Klub, Otkert, Dojo, A38. BONUS: McDonalds Nyugati - fiesta hasta las 4am.',
      descS:'Noche libre. Los clubs están en la pestaña Info 🎉',loc:'Szimpla Kert · Kazinczy u. 14'},
 
     // ─── DOMINGO 22 ───
     {id:'d1',day:'DOMINGO 22',time:D(3,10,0),emoji:'☀️',title:'Desayuno + Despedida',
-     desc:'Desayuno en el hotel. Fotos comprometedoras. Borrar algo = pagar ronda.
-
-VUELOS DE VUELTA:
-11:25 → Max · 13:25 → Travol, Ale, Jor, Fer
-14:10 → Sito/grupo · 14:40 → Aynat · 14:50 → grupo Málaga',
+     desc:'Desayuno en el hotel. Fotos comprometedoras. Borrar algo = pagar ronda. VUELOS: 11:25 Max, 13:25 Travol/Ale/Jor/Fer, 14:10 grupo, 14:40 Aynat, 14:50 grupo Malaga',
      descS:'Último desayuno juntos ☀️ Después... libertad',loc:'SWU Broadway · Csányi u. 9-11'},
   ];
 }
