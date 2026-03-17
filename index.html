@@ -2114,13 +2114,12 @@ function convertCurrency() {
 function openNoAdminPopup() {
   let m = document.getElementById('noadmin-popup');
   if (!m) { m=document.createElement('div'); m.id='noadmin-popup'; m.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);padding:20px'; document.body.appendChild(m); }
-function openNoAdminPopup() {
-  let m = document.getElementById('noadmin-popup');
-  if (!m) { m=document.createElement('div'); m.id='noadmin-popup'; m.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);padding:20px'; document.body.appendChild(m); }
   m.innerHTML = `<div style="max-width:380px;width:100%;cursor:pointer" onclick="document.getElementById('noadmin-popup').style.display='none'">
     <img src="meme.png" alt="meme" style="width:100%;border-radius:16px;display:block">
   </div>`;
   m.style.display='flex';
+  m.onclick = e => { if(e.target===m||e.target.tagName==='IMG') m.style.display='none'; };
+}
   m.onclick = e => { if(e.target===m||e.target.tagName==='IMG') m.style.display='none'; };
 }
 
