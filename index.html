@@ -973,7 +973,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
         <div class="info-card-title">⚡ Pruebas y Preguntas</div>
         <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
         <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
-        <button id="btn-propuesta" onclick="openPropuesta()" style="display:none;width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
+        <button id="btn-propuesta" onclick="isAdmin ? openPropuesta() : alert('Pues agarrame esta 🤌')" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
       </div>
     </div>
   </div>
@@ -2028,18 +2028,16 @@ function showAdminControls() {
   const btnLock = document.getElementById('btn-lockapp');
   const btnPlan = document.getElementById('btn-add-plan');
   const btnPropPlan = document.getElementById('btn-propuesta-plan');
-  const btnPropWar = document.getElementById('btn-propuesta');
   if (isAdmin) {
     if (btnLock) btnLock.style.display = 'block';
     if (btnPlan) { btnPlan.style.display='flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
     if (btnPropPlan) btnPropPlan.style.display = 'block';
-    if (btnPropWar) btnPropWar.style.display = 'block';
   } else {
     if (btnLock) btnLock.style.display = 'none';
     if (btnPlan) btnPlan.style.display = 'none';
     if (btnPropPlan) btnPropPlan.style.display = 'none';
-    if (btnPropWar) btnPropWar.style.display = 'none';
   }
+  // btn-propuesta siempre visible en War Room, comportamiento diferente por rol
 }
 
 function initAppLock() {
