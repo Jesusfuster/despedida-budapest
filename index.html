@@ -973,7 +973,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
         <div class="info-card-title">⚡ Pruebas y Preguntas</div>
         <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
         <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
-        <button id="btn-propuesta" onclick="isAdmin ? openPropuesta() : alert('Pues agarrame esta 🤌')" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
+        <button id="btn-propuesta" onclick="isAdmin ? openPropuesta() : openNoAdminPopup()" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
       </div>
     </div>
   </div>
@@ -1415,17 +1415,6 @@ function renderInfo() {
       <a class="info-btn" href="https://www.google.com/maps/search/?api=1&query=Csányi+u.+9-11,+1077+Budapest" target="_blank">📍 Cómo llegar al apartamento</a>
     </div>
 
-    <!-- INCLUIDO PRE-VIAJE -->
-    <div class="info-card">
-      <div class="info-card-title">✅ Incluido Pre-Viaje</div>
-      <div class="info-row"><span class="info-label">🏠 Alojamiento</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-      <div class="info-row"><span class="info-label">👗 Disfraces</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-      <div class="info-row"><span class="info-label">🍽️ Comida viernes</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-      <div class="info-row"><span class="info-label">🎳 Actividad jueves</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-      <div class="info-row"><span class="info-label">⛵ Actividad viernes</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-      <div class="info-row"><span class="info-label">⛳ Actividad sábado</span><span class="info-val" style="color:#00e676">Incluido</span></div>
-    </div>
-
     <!-- TIPO DE CAMBIO -->
     <div class="info-card">
       <div class="info-card-title">💱 Money</div>
@@ -1446,6 +1435,17 @@ function renderInfo() {
         💡 Sáb y Dom = mal cambio en Revolut<br>
         💡 Tener algo de efectivo por si acaso
       </div>
+    </div>
+
+    <!-- INCLUIDO PRE-VIAJE -->
+    <div class="info-card">
+      <div class="info-card-title">✅ Incluido Pre-Viaje</div>
+      <div class="info-row"><span class="info-label">🏠 Alojamiento</span><span class="info-val" style="color:#00e676">Incluido</span></div>
+      <div class="info-row"><span class="info-label">👗 Disfraces</span><span class="info-val" style="color:#00e676">Incluido</span></div>
+      <div class="info-row"><span class="info-label">🍽️ Comida viernes</span><span class="info-val" style="color:#00e676">Incluido</span></div>
+      <div class="info-row"><span class="info-label">🎳 Actividad jueves</span><span class="info-val" style="color:#00e676">Incluido</span></div>
+      <div class="info-row"><span class="info-label">⛵ Actividad viernes</span><span class="info-val" style="color:#00e676">Incluido</span></div>
+      <div class="info-row"><span class="info-label">⛳ Actividad sábado</span><span class="info-val" style="color:#00e676">Incluido</span></div>
     </div>
 
     <!-- MAPA -->
@@ -2109,6 +2109,20 @@ function convertCurrency() {
   } else {
     el.textContent = Math.round(input * rate).toLocaleString() + ' Ft';
   }
+}
+
+function openNoAdminPopup() {
+  let m = document.getElementById('noadmin-popup');
+  if (!m) { m=document.createElement('div'); m.id='noadmin-popup'; m.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);padding:20px'; document.body.appendChild(m); }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border)">
+    <div style="font-size:2.5rem;margin-bottom:12px">🤌</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.08em;background:linear-gradient(90deg,#bf5af2,#ff375f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px">PUES AGARRAME ESTA</div>
+    <div style="font-size:.82rem;color:var(--text);line-height:1.7;margin-bottom:16px;font-style:italic">"Pues agarrame esta, no sé qué plan llevarás tú."</div>
+    <div style="font-size:.68rem;color:var(--muted);margin-bottom:20px">— Aristóteles</div>
+    <button onclick="document.getElementById('noadmin-popup').style.display='none'" style="width:100%;padding:14px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">ENTENDIDO 🤌</button>
+  </div>`;
+  m.style.display='flex';
+  m.onclick = e => { if(e.target===m) m.style.display='none'; };
 }
 
 function initApp(){
