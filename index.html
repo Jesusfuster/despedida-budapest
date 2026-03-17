@@ -919,10 +919,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
     </div>
   </header>
   <div class="tabs">
-    <div class="tab active" id="tab-map"  onclick="switchTab('map')"><span class="tab-icon">🗺️</span>Mapa</div>
-    <div class="tab"        id="tab-crew" onclick="switchTab('crew')"><span class="tab-icon">👥</span><span id="crew-tab-label">Crew</span></div>
-    <div class="tab"        id="tab-plan" onclick="switchTab('plan')"><span class="tab-icon">📋</span>Plan</div>
-    <div class="tab"        id="tab-info" onclick="switchTab('info')"><span class="tab-icon">⚠️</span>Info</div>
+    <div class="tab active" id="tab-map"   onclick="switchTab('map')"><span class="tab-icon">🗺️</span>Mapa</div>
+    <div class="tab"        id="tab-crew"  onclick="switchTab('crew')"><span class="tab-icon">👥</span><span id="crew-tab-label">Crew</span></div>
+    <div class="tab"        id="tab-plan"  onclick="switchTab('plan')"><span class="tab-icon">📋</span>Plan</div>
+    <div class="tab"        id="tab-banco" onclick="switchTab('banco')"><span class="tab-icon">🏦</span>Banco</div>
+    <div class="tab"        id="tab-info"  onclick="switchTab('info')"><span class="tab-icon">⚠️</span>Info</div>
   </div>
   <div class="panel active" id="panel-map">
     <div id="map-wrap">
@@ -945,7 +946,19 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
       <div id="plan-content"></div>
     </div>
     <button id="btn-add-plan" onclick="openNewPlanModal()" style="display:none;position:absolute;bottom:14px;right:14px;width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(30,111,255,.5);z-index:500;line-height:1">+</button>
+    <button id="btn-propuesta-plan" onclick="openPropuesta()" style="display:none;position:absolute;bottom:14px;left:14px;padding:10px 18px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:24px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.1em;cursor:pointer;z-index:500;box-shadow:0 4px 14px rgba(191,90,242,.4)">🎯 PROPUESTA</button>
   </div>
+
+  <!-- BANCO DE BUDAPUTES -->
+  <div class="panel" id="panel-banco">
+    <div style="overflow-y:auto;flex:1;padding:14px 12px 40px">
+      <div class="plan-h" style="font-size:1.6rem">🏦 BANCO DE BUDAPUTES</div>
+      <div class="plan-d" style="margin-bottom:16px">BUDAPEST · 19-22 MARZO 2026</div>
+      <div id="banco-content"></div>
+      <button onclick="openAddGasto()" style="width:100%;margin-top:10px;padding:13px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:10px;color:#00e676;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">+ AÑADIR GASTO</button>
+    </div>
+  </div>
+
   <div class="panel" id="panel-info">
     <div id="plan-scroll" style="overflow-y:auto;flex:1;padding:14px 12px 40px">
       <div id="info-content"></div>
@@ -1387,20 +1400,12 @@ function renderInfo() {
       <div class="info-card-title">🏆 Pruebas y Preguntas</div>
       <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
       <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
-      <button id="btn-propuesta" onclick="openPropuesta()" style="display:none;width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
     </div>
 
     <!-- MARCADOR -->
     <div class="info-card" id="marcador-card">
       <div class="info-card-title">🏆 Marcador</div>
       <div id="marcador-content" style="margin-top:4px">Cargando...</div>
-    </div>
-
-    <!-- GASTOS -->
-    <div class="info-card">
-      <div class="info-card-title">💸 Gastos</div>
-      <div id="gastos-content" style="margin-top:4px">Cargando...</div>
-      <button onclick="openAddGasto()" style="width:100%;margin-top:10px;padding:11px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:10px;color:#00e676;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.1em;cursor:pointer">+ AÑADIR GASTO</button>
     </div>
 
     <!-- MAPA -->
@@ -1413,7 +1418,6 @@ function renderInfo() {
 
   fetchRate();
   renderMarcador();
-  renderGastos();
 }
 
 // ═══════════════════════════════════════════════
@@ -1625,7 +1629,7 @@ function calcularLiquidacion(gastos) {
 }
 
 function renderGastos() {
-  const el = document.getElementById('gastos-content');
+  const el = document.getElementById('banco-content') || document.getElementById('gastos-content');
   if (!el) return;
   const lista = Object.values(_gastos).sort((a,b)=>a.ts-b.ts);
   if (!lista.length) { el.innerHTML=`<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:12px 0">Sin gastos todavía</div>`; return; }
@@ -1853,10 +1857,10 @@ function renderPropuestaOverlay() {
 function showAdminControls() {
   const btnLock = document.getElementById('btn-lockapp');
   const btnPlan = document.getElementById('btn-add-plan');
-  const btnProp = document.getElementById('btn-propuesta');
+  const btnProp = document.getElementById('btn-propuesta-plan');
   if (isAdmin) {
     if (btnLock) btnLock.style.display = 'block';
-    if (btnPlan) { btnPlan.style.display = 'flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
+    if (btnPlan) { btnPlan.style.display='flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
     if (btnProp) btnProp.style.display = 'block';
   } else {
     if (btnLock) btnLock.style.display = 'none';
@@ -2108,7 +2112,7 @@ function loadPlanFromFirebase(){if(!firebase||!firebase.database)return;firebase
 // ════════════════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════════════════
-function switchTab(name){['map','crew','plan','info'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);}
+function switchTab(name){['map','crew','plan','banco','info'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);if(name==='banco')renderGastos();}
 
 // ════════════════════════════════════════════════════════
 // ADMIN PANEL
