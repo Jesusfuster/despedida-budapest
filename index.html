@@ -2904,13 +2904,6 @@ function _getPruebasData() {
     return edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
   });
 }
-    {n:'19',e:'💋', t:'El beso del desconocido', d:'Hacer que un desconocido os dé un beso en la mejilla.'},
-    {n:'20',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'Si pasáis cerca de otro barco de turistas, gritad un saludo pirata. Si os responden: 5 del grupo beben media cerveza. Si os ignoran: bebéis los novios.'},
-  ].map(p => {
-    const edit = window._notionEdits && window._notionEdits['prueba'+p.n];
-    return edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
-  });
-}
 
 function _getPreguntasData() {
   return [
