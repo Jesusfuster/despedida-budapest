@@ -1473,6 +1473,59 @@ function marcadorPunto(id, tipo, delta) {
 }
 
 // ═══════════════════════════════════════════════
+// PLANES CUSTOM (ADMIN)
+// ═══════════════════════════════════════════════
+function loadCustomPlansFromFirebase() {
+  if (!firebase || !firebase.database) return;
+  firebase.database().ref('customPlans').on('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+    planItems = planItems.filter(i => !i.id.startsWith('custom_'));
+    Object.values(data).forEach(item => planItems.push({...item, time: new Date(item.time)}));
+    planItems.sort((a,b) => a.time - b.time);
+    renderPlan();
+  });
+}
+
+function openNewPlanModal() {
+  let m = document.getElementById('new-plan-modal');
+  if (!m) { m=document.createElement('div'); m.id='new-plan-modal'; m.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;padding:0'; document.body.appendChild(m); }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;margin-bottom:16px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--accent2);letter-spacing:.08em;flex:1">➕ NUEVA ACTIVIDAD</span>
+      <button onclick="document.getElementById('new-plan-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="margin-bottom:10px"><label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">EMOJI</label>
+      <input id="np-emoji" value="🎯" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1.2rem;box-sizing:border-box;margin-top:4px"></div>
+    <div style="margin-bottom:10px"><label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">TÍTULO</label>
+      <input id="np-title" placeholder="Nombre de la actividad" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px"></div>
+    <div style="margin-bottom:10px"><label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">FECHA Y HORA</label>
+      <input id="np-time" type="datetime-local" value="2026-03-19T20:00" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px"></div>
+    <div style="margin-bottom:10px"><label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">DESCRIPCIÓN</label>
+      <textarea id="np-desc" rows="3" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;box-sizing:border-box;margin-top:4px;resize:vertical"></textarea></div>
+    <div style="margin-bottom:10px"><label style="font-size:.7rem;color:var(--gold);letter-spacing:.1em">🔒 DESCRIPCIÓN DESPEDIDOS</label>
+      <textarea id="np-descs" rows="2" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--gold);border-radius:8px;color:var(--text);font-size:.82rem;box-sizing:border-box;margin-top:4px;resize:vertical"></textarea></div>
+    <div style="margin-bottom:14px"><label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">UBICACIÓN</label>
+      <input id="np-loc" placeholder="Nombre del lugar" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px"></div>
+    <button onclick="saveNewPlan()" style="width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">💾 AÑADIR AL PLANNING</button>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+function saveNewPlan() {
+  const title = document.getElementById('np-title').value.trim();
+  const timeVal = document.getElementById('np-time').value;
+  if (!title || !timeVal) { toast('⚠️ Pon título y fecha'); return; }
+  const time = new Date(timeVal);
+  const id = 'custom_' + Date.now();
+  const day = ['MIÉ 18','JUE 19','VIE 20','SÁB 21','DOM 22'].find(d=>{const n=time.getDate();return(d.includes('18')&&n===18)||(d.includes('19')&&n===19)||(d.includes('20')&&n===20)||(d.includes('21')&&n===21)||(d.includes('22')&&n===22);})||'BUDAPEST';
+  const newItem = { id, day, time, emoji:document.getElementById('np-emoji').value||'🎯', title, desc:document.getElementById('np-desc').value.trim(), descS:document.getElementById('np-descs').value.trim()||'¡Sorpresa!', loc:document.getElementById('np-loc').value.trim() };
+  planItems.push(newItem); planItems.sort((a,b)=>a.time-b.time);
+  if (firebase&&firebase.database) firebase.database().ref('customPlans/'+id).set({...newItem,time:time.getTime()}).then(()=>toast('✅ Actividad añadida'));
+  renderPlan(); document.getElementById('new-plan-modal').style.display='none';
+}
+
+// ═══════════════════════════════════════════════
 // GASTOS COMPARTIDOS
 // ═══════════════════════════════════════════════
 let _gastos = {};
