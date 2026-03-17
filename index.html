@@ -1559,10 +1559,16 @@ function openAddGasto(editId) {
   const editando = editId ? _gastos[editId] : null;
   let m = document.getElementById('gasto-modal');
   if (!m) { m=document.createElement('div'); m.id='gasto-modal'; m.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.88);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(m); }
-  const todos = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
-    'Primo Jay','Primo Kike','Adri','Jayala','Juan','Arroyo','Pocholo','Adrian','Bazan','Mick',
+
+  // Lista de participantes: primero no-despedidos, luego despedidos al final
+  const noDespos = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
+    'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
     'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+  const despos = ['Arroyo','Pocholo','Juan Ayala'];
+  // Coger lista guardada en Firebase o usar la por defecto
+  const todosBase = window._gastosParticipantes || [...noDespos, ...despos];
   const partSel = editando ? editando.participantes : [];
+
   m.innerHTML = `<div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;color:#00e676">💸 ${editando?'EDITAR':'NUEVO'} GASTO</span>
@@ -1572,17 +1578,60 @@ function openAddGasto(editId) {
       <input id="g-desc" value="${editando?editando.desc:''}" placeholder="Ej: Bolera, Cena Fuego..." style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px"></div>
     <div style="margin-bottom:10px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">PAGÓ</label>
       <select id="g-paga" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px">
-        ${todos.map(n=>`<option value="${n}" ${(editando?editando.paga:myName)===n?'selected':''}>${n}</option>`).join('')}
+        ${todosBase.map(n=>`<option value="${n}" ${(editando?editando.paga:myName)===n?'selected':''}>${n}</option>`).join('')}
       </select></div>
     <div style="margin-bottom:10px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">IMPORTE (€)</label>
       <input id="g-importe" type="number" step="0.01" value="${editando?editando.importe:''}" placeholder="0.00" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px"></div>
-    <div style="margin-bottom:14px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">ENTRE QUIÉNES (vacío = todos)</label>
-      <div id="g-participantes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
-        ${todos.map(n=>{const sel=partSel.includes(n);return`<button onclick="toggleParticipante(this)" data-name="${n}" style="padding:5px 10px;background:${sel?'rgba(0,230,118,.25)':'rgba(255,255,255,.06)'};border:1px solid ${sel?'#00e676':'var(--border)'};border-radius:20px;color:${sel?'#00e676':'var(--muted)'};font-size:.72rem;cursor:pointer">${n}</button>`;}).join('')}
-      </div></div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">ENTRE QUIÉNES</label>
+        <span style="font-size:.65rem;color:var(--muted)">vacío = todos excepto despedidos</span>
+      </div>
+      <div id="g-participantes" style="display:flex;flex-wrap:wrap;gap:6px">
+        ${noDespos.map(n=>{const sel=partSel.includes(n);return _btnParticipante(n,sel,'#4da3ff');}).join('')}
+        ${isAdmin?`<button onclick="openAddPersona()" style="padding:5px 10px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:20px;color:var(--gold);font-size:.72rem;cursor:pointer">+ añadir</button>`:''}
+        <div style="width:100%;font-size:.65rem;color:var(--muted);margin:6px 0 2px;letter-spacing:.08em">— DESPEDIDOS —</div>
+        ${despos.map(n=>{const sel=partSel.includes(n);return _btnParticipante(n,sel,'#bf5af2',true);}).join('')}
+      </div>
+    </div>
     <button onclick="guardarGasto('${editId||''}')" style="width:100%;padding:14px;background:linear-gradient(90deg,#00e676,#1e6fff);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">💾 GUARDAR GASTO</button>
   </div>`;
   m.style.display = 'flex';
+}
+
+function _btnParticipante(n, sel, color, isDespo) {
+  const delBtn = isAdmin && !isDespo ? `<span onclick="eliminarPersonaGasto(event,'${n}')" style="margin-left:3px;opacity:.5;font-size:.65rem;cursor:pointer">✕</span>` : '';
+  return `<button onclick="toggleParticipante(this)" data-name="${n}" style="padding:5px 10px;background:${sel?`rgba(${isDespo?'191,90,242':'77,163,255'},.25)`:'rgba(255,255,255,.06)'};border:1px solid ${sel?color:'var(--border)'};border-radius:20px;color:${sel?color:'var(--muted)'};font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:2px">${n}${delBtn}</button>`;
+}
+
+function eliminarPersonaGasto(e, nombre) {
+  e.stopPropagation();
+  if (!isAdmin) return;
+  if (!confirm('¿Eliminar a ' + nombre + ' de la lista?')) return;
+  window._gastosParticipantes = (window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']]).filter(p=>p!==nombre);
+  if (firebase&&firebase.database) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
+  openAddGasto(document.querySelector('#gasto-modal input#g-desc') ? '_reload' : null);
+}
+
+function openAddPersona() {
+  const nombre = prompt('Nombre de la persona a añadir:');
+  if (!nombre || !nombre.trim()) return;
+  const n = nombre.trim();
+  const base = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+  window._gastosParticipantes = window._gastosParticipantes || [...base];
+  if (!window._gastosParticipantes.includes(n)) {
+    window._gastosParticipantes.push(n);
+    if (firebase&&firebase.database) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
+  }
+  openAddGasto(null);
+}
+
+function initGastosParticipantes() {
+  if (!firebase||!firebase.database) return;
+  firebase.database().ref('gastosParticipantes').on('value', snap => {
+    const data = snap.val();
+    if (data && Array.isArray(data)) window._gastosParticipantes = data;
+  });
 }
 
 function toggleParticipante(btn) {
@@ -1598,13 +1647,18 @@ function guardarGasto(editId) {
   const importe = parseFloat(document.getElementById('g-importe').value);
   if (!desc) { toast('⚠️ Añade descripción'); return; }
   if (!importe || importe <= 0) { toast('⚠️ Importe inválido'); return; }
-  const btns = document.querySelectorAll('#g-participantes button');
+  const btns = document.querySelectorAll('#g-participantes button[data-name]');
   let participantes = [...btns].filter(b=>b.style.background.includes('0.25')||b.style.background.includes('.25')).map(b=>b.dataset.name);
-  if (participantes.length === 0) participantes = [...btns].map(b=>b.dataset.name);
-  const id = editId || ('g_' + Date.now());
-  firebase.database().ref('gastos/' + id).set({ id, desc, paga, importe, participantes, ts: editId ? (_gastos[editId]?.ts||Date.now()) : Date.now() });
+  // Vacío = todos excepto despedidos
+  const despos = ['Arroyo','Pocholo','Juan Ayala'];
+  if (participantes.length === 0) {
+    const todosBase = window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']];
+    participantes = todosBase.filter(p => !despos.includes(p));
+  }
+  const id = editId && editId !== '_reload' ? editId : ('g_' + Date.now());
+  firebase.database().ref('gastos/' + id).set({ id, desc, paga, importe, participantes, ts: editId && editId !== '_reload' ? (_gastos[editId]?.ts||Date.now()) : Date.now() });
   document.getElementById('gasto-modal').style.display = 'none';
-  toast(editId ? '✅ Gasto actualizado' : '✅ Gasto añadido');
+  toast(editId && editId !== '_reload' ? '✅ Gasto actualizado' : '✅ Gasto añadido');
 }
 
 let _deleteTimer = null;
@@ -2003,7 +2057,7 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initGastos(); initPropuestas();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initGastos(); initGastosParticipantes(); initPropuestas();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
