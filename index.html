@@ -920,10 +920,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
     </div>
   </header>
   <div class="tabs">
-    <div class="tab active" id="tab-map"   onclick="switchTab('map')"><span class="tab-icon">🗺️</span>Mapa</div>
-    <div class="tab"        id="tab-crew"  onclick="switchTab('crew')"><span class="tab-icon">👥</span><span id="crew-tab-label">Crew</span></div>
-    <div class="tab"        id="tab-plan"  onclick="switchTab('plan')"><span class="tab-icon">📋</span>Plan</div>
-    <div class="tab"        id="tab-info"  onclick="switchTab('info')"><span class="tab-icon">⚠️</span>Info</div>
+    <div class="tab active" id="tab-info"   onclick="switchTab('info')"><span class="tab-icon">⚠️</span>Info</div>
+    <div class="tab"        id="tab-plan"   onclick="switchTab('plan')"><span class="tab-icon">📋</span>Plan</div>
+    <div class="tab"        id="tab-war"    onclick="switchTab('war')"><span class="tab-icon">⚔️</span>War Room</div>
+    <div class="tab"        id="tab-map"    onclick="switchTab('map')"><span class="tab-icon">🗺️</span>Mapa</div>
+    <div class="tab"        id="tab-crew"   onclick="switchTab('crew')"><span class="tab-icon">👥</span><span id="crew-tab-label">Crew</span></div>
   </div>
   <div class="panel active" id="panel-map">
     <div id="map-wrap">
@@ -952,6 +953,28 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   <div class="panel" id="panel-info">
     <div id="plan-scroll" style="overflow-y:auto;flex:1;padding:14px 12px 40px">
       <div id="info-content"></div>
+    </div>
+  </div>
+
+  <!-- WAR ROOM -->
+  <div class="panel" id="panel-war">
+    <div style="overflow-y:auto;flex:1;padding:14px 12px 80px">
+      <div class="plan-h" style="font-size:1.5rem">⚔️ WAR ROOM</div>
+      <div class="plan-d" style="margin-bottom:14px">BUDAPEST · 19-22 MARZO 2026</div>
+
+      <!-- MARCADOR -->
+      <div class="info-card" id="marcador-card">
+        <div class="info-card-title">🏆 Marcador</div>
+        <div id="marcador-content" style="margin-top:4px">Cargando...</div>
+      </div>
+
+      <!-- PRUEBAS Y PREGUNTAS -->
+      <div class="info-card">
+        <div class="info-card-title">⚡ Pruebas y Preguntas</div>
+        <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
+        <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
+        <button id="btn-propuesta" onclick="openPropuesta()" style="display:none;width:100%;margin-top:12px;padding:12px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;cursor:pointer">🎯 LANZAR PROPUESTA</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1418,24 +1441,11 @@ function renderInfo() {
         </div>
         <div id="conv-result" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--gold);text-align:center;min-height:2rem"></div>
       </div>
-      <a class="info-btn" href="https://tricount.com/es-es/tZvPAlCEIuMgPVPTkX" target="_blank">💸 Abrir Tricount del viaje</a>
+      <a class="info-btn" href="https://tricount.com/es-es/tZvPAlCEIuMgPVPTkX" target="_blank">💸 Tricount</a>
       <div style="font-size:.68rem;color:var(--muted);margin-top:10px;line-height:1.6">
         💡 Sáb y Dom = mal cambio en Revolut<br>
         💡 Tener algo de efectivo por si acaso
       </div>
-    </div>
-
-    <!-- PRUEBAS Y PREGUNTAS -->
-    <div class="info-card">
-      <div class="info-card-title">🏆 Pruebas y Preguntas</div>
-      <button class="info-btn" onclick="openNotionModal('pruebas','⚡ PRUEBAS')">⚡ Ver PRUEBAS</button>
-      <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
-    </div>
-
-    <!-- MARCADOR -->
-    <div class="info-card" id="marcador-card">
-      <div class="info-card-title">🏆 Marcador</div>
-      <div id="marcador-content" style="margin-top:4px">Cargando...</div>
     </div>
 
     <!-- MAPA -->
@@ -1447,7 +1457,6 @@ function renderInfo() {
   `;
 
   fetchRate();
-  renderMarcador();
 }
 
 // ═══════════════════════════════════════════════
@@ -2018,15 +2027,18 @@ function renderPropuestaOverlay() {
 function showAdminControls() {
   const btnLock = document.getElementById('btn-lockapp');
   const btnPlan = document.getElementById('btn-add-plan');
-  const btnProp = document.getElementById('btn-propuesta-plan');
+  const btnPropPlan = document.getElementById('btn-propuesta-plan');
+  const btnPropWar = document.getElementById('btn-propuesta');
   if (isAdmin) {
     if (btnLock) btnLock.style.display = 'block';
     if (btnPlan) { btnPlan.style.display='flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
-    if (btnProp) btnProp.style.display = 'block';
+    if (btnPropPlan) btnPropPlan.style.display = 'block';
+    if (btnPropWar) btnPropWar.style.display = 'block';
   } else {
     if (btnLock) btnLock.style.display = 'none';
     if (btnPlan) btnPlan.style.display = 'none';
-    if (btnProp) btnProp.style.display = 'none';
+    if (btnPropPlan) btnPropPlan.style.display = 'none';
+    if (btnPropWar) btnPropWar.style.display = 'none';
   }
 }
 
@@ -2103,6 +2115,8 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
+  // Arrancar en pestaña Info
+  switchTab('info');
   startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initGastos(); initGastosParticipantes(); initPropuestas();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
@@ -2280,7 +2294,7 @@ function loadPlanFromFirebase(){if(!firebase||!firebase.database)return;firebase
 // ════════════════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════════════════
-function switchTab(name){['map','crew','plan','info'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);}
+function switchTab(name){['info','plan','war','map','crew'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);if(name==='war'){renderMarcador();}}
 
 // ════════════════════════════════════════════════════════
 // ADMIN PANEL
