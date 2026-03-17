@@ -1454,9 +1454,57 @@ function renderInfo() {
       <div style="font-size:.72rem;color:var(--muted);margin-bottom:10px">Restaurantes, bares y clubs guardados</div>
       <a class="info-btn" href="https://maps.app.goo.gl/xHYZ5DEpkDGh3Sbd7" target="_blank">📍 Abrir Mapa</a>
     </div>
+
+    <!-- TIEMPO -->
+    <div class="info-card" id="weather-card">
+      <div class="info-card-title">🌤️ Tiempo en Budapest</div>
+      <div id="weather-content" style="margin-top:8px;font-size:.8rem;color:var(--muted)">Cargando...</div>
+    </div>
   `;
 
   fetchRate();
+  fetchWeather();
+}
+
+function fetchWeather() {
+  const WMO = {0:'☀️ Despejado',1:'🌤️ Poco nublado',2:'⛅ Parcialmente nublado',3:'☁️ Nublado',
+    45:'🌫️ Niebla',48:'🌫️ Niebla',51:'🌦️ Llovizna',53:'🌦️ Llovizna',55:'🌦️ Llovizna',
+    61:'🌧️ Lluvia',63:'🌧️ Lluvia',65:'🌧️ Lluvia fuerte',71:'🌨️ Nieve',73:'🌨️ Nieve',
+    75:'❄️ Nieve fuerte',80:'🌦️ Chubascos',81:'🌧️ Chubascos',82:'⛈️ Chubascos fuertes',
+    95:'⛈️ Tormenta',96:'⛈️ Tormenta',99:'⛈️ Tormenta'};
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=47.4979&longitude=19.0402&current=temperature_2m,weathercode,windspeed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_sum&timezone=Europe%2FBudapest&forecast_days=5')
+    .then(r=>r.json()).then(d=>{
+      const el = document.getElementById('weather-content');
+      if (!el) return;
+      const c = d.current, daily = d.daily;
+      const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const dayNames = ['Jue 19','Vie 20','Sáb 21','Dom 22'];
+      // Actual ahora
+      const desc = WMO[c.weathercode] || '🌡️';
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="font-size:2.2rem">${desc.split(' ')[0]}</div>
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold)">${Math.round(c.temperature_2m)}°C</div>
+            <div style="font-size:.7rem;color:var(--muted)">${desc.split(' ').slice(1).join(' ')} · 💨 ${Math.round(c.windspeed_10m)} km/h</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          ${daily.time.slice(0,4).map((t,i)=>{
+            const w = WMO[daily.weathercode[i]] || '🌡️';
+            return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center">
+              <div style="font-size:.65rem;color:var(--muted);margin-bottom:4px">${dayNames[i]||days[new Date(t).getDay()]}</div>
+              <div style="font-size:1.2rem">${w.split(' ')[0]}</div>
+              <div style="font-size:.7rem;color:var(--gold);font-family:'Bebas Neue',sans-serif">${Math.round(daily.temperature_2m_max[i])}° <span style="color:var(--muted)">${Math.round(daily.temperature_2m_min[i])}°</span></div>
+              ${daily.precipitation_sum[i]>0?`<div style="font-size:.6rem;color:#4da3ff">💧${daily.precipitation_sum[i]}mm</div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:.6rem;color:var(--muted);margin-top:8px;text-align:right">Open-Meteo · Budapest</div>`;
+    }).catch(()=>{
+      const el=document.getElementById('weather-content');
+      if(el) el.innerHTML='<span style="color:var(--muted)">No se pudo cargar el tiempo</span>';
+    });
 }
 
 // ═══════════════════════════════════════════════
