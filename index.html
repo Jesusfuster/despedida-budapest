@@ -847,6 +847,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
 .info-val.mono{font-family:'DM Mono',monospace;color:var(--gold);font-size:.9rem;letter-spacing:.1em}
 .info-btn{display:block;width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--accent2);font-size:.8rem;font-weight:700;text-align:center;text-decoration:none;letter-spacing:.05em;margin-top:6px;box-sizing:border-box}
 .info-btn:active{opacity:.75}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 </style>
 </head>
 <body>
@@ -931,6 +932,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
         <span id="map-status">Esperando GPS...</span>
         <button class="btn-sm" onclick="refreshGPS()">↺</button><button class="btn-privacy sharing" id="btn-privacy" onclick="togglePrivacy()">👁 Visible</button>
       </div>
+      <button id="btn-lockapp" onclick="toggleAppLock()" style="display:none;position:absolute;bottom:56px;right:14px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.4);font-size:.6rem;padding:5px 9px;cursor:pointer;letter-spacing:.06em;z-index:500">🔐</button>
     </div>
   </div>
   <div class="panel" id="panel-crew">
@@ -1394,6 +1396,71 @@ function renderInfo() {
   fetchRate();
 }
 
+// ═══════════════════════════════════════════════
+// MODO ESPERA (APP LOCK)
+// ═══════════════════════════════════════════════
+function initAppLock() {
+  // Mostrar botón solo si admin
+  if (isAdmin) {
+    const btn = document.getElementById('btn-lockapp');
+    if (btn) btn.style.display = 'block';
+  }
+  // Escuchar cambios en Firebase
+  if (firebase && firebase.database) {
+    firebase.database().ref('appLocked').on('value', snap => {
+      const locked = snap.val() === true;
+      if (locked && !isAdmin) {
+        showWaitingScreen();
+      } else {
+        hideWaitingScreen();
+      }
+      // Actualizar botón admin
+      const btn = document.getElementById('btn-lockapp');
+      if (btn && isAdmin) {
+        btn.textContent = locked ? '🔓' : '🔐';
+        btn.title = locked ? 'Desbloquear app' : 'Modo espera';
+        btn.style.color = locked ? 'rgba(255,100,100,.6)' : 'rgba(255,255,255,.4)';
+      }
+    });
+  }
+}
+
+function toggleAppLock() {
+  if (!isAdmin) return;
+  if (!firebase || !firebase.database) return;
+  firebase.database().ref('appLocked').once('value', snap => {
+    const current = snap.val() === true;
+    firebase.database().ref('appLocked').set(!current);
+    toast(!current ? '🔐 App bloqueada' : '🔓 App desbloqueada');
+  });
+}
+
+function showWaitingScreen() {
+  let m = document.getElementById('waiting-screen');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'waiting-screen';
+    m.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center';
+    m.innerHTML = `
+      <div style="font-size:3.5rem;margin-bottom:16px;animation:pulse 2s infinite">⏳</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:.12em;background:linear-gradient(90deg,#4da3ff,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">TODAVÍA NO</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.25em;color:var(--muted);margin-bottom:32px">EL SHOW EMPIEZA CUANDO LLEGUES</div>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.8;max-width:280px">
+        Guarda energía.<br>
+        Hidrátate bien.<br>
+        Saluda a tu novia.<br>
+        <span style="color:var(--accent2);margin-top:12px;display:block">Ya te avisamos 🤙</span>
+      </div>`;
+    document.body.appendChild(m);
+  }
+  m.style.display = 'flex';
+}
+
+function hideWaitingScreen() {
+  const m = document.getElementById('waiting-screen');
+  if (m) m.style.display = 'none';
+}
+
 function convertCurrency() {
   const input = parseFloat(document.getElementById('conv-input').value);
   const dir = document.getElementById('conv-dir').value;
@@ -1409,7 +1476,7 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
