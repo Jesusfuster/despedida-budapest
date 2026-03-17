@@ -1532,27 +1532,64 @@ function btnStyleM(color) {
 function renderMarcador() {
   const el = document.getElementById('marcador-content');
   if (!el) return;
-  el.innerHTML = DESPEDIDOS_MARCADOR.map(d => {
+
+  // Calcular totales y ordenar para el podio
+  const scores = DESPEDIDOS_MARCADOR.map(d => {
     const s = _marcador[d.id] || {p:0,q:0};
-    const total = s.p + s.q;
+    return { ...d, p: s.p||0, q: s.q||0, total: (s.p||0) + (s.q||0) };
+  }).sort((a,b) => b.total - a.total);
+
+  // Podio: 1º centro (alto), 2º izquierda, 3º derecha
+  const podioOrder = scores.length >= 3
+    ? [scores[1], scores[0], scores[2]]
+    : scores;
+
+  const podioHeights = ['60px', '90px', '40px'];
+  const podioColors = ['#c0c0c0', '#ffd700', '#cd7f32'];
+  const podioLabels = ['🥈', '🥇', '🥉'];
+
+  const podioHtml = `
+    <div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-bottom:16px;padding:0 8px">
+      ${podioOrder.map((d, i) => {
+        const originalPos = scores.indexOf(d);
+        const color = podioColors[i];
+        const label = podioLabels[i];
+        const height = podioHeights[i];
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:2rem">${d.emoji}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.06em;color:${color}">${d.name}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:${color}">${d.total}</div>
+          <div style="width:100%;height:${height};background:linear-gradient(180deg,${color}44,${color}22);border:1px solid ${color}88;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:1.2rem">${label}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Detalle + botones admin bajo el podio
+  const detalleHtml = DESPEDIDOS_MARCADOR.map(d => {
+    const s = _marcador[d.id] || {p:0,q:0};
+    const total = (s.p||0) + (s.q||0);
     const adminBtns = isAdmin ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
       <button onclick="marcadorPunto('${d.id}','p',1)"  style="${btnStyleM('#00e676')}">+1 Prueba</button>
       <button onclick="marcadorPunto('${d.id}','q',1)"  style="${btnStyleM('#4da3ff')}">+1 Pregunta</button>
-      <button onclick="marcadorPunto('${d.id}','p',-1)" style="${btnStyleM('rgba(255,59,48,.6)')}">-1</button>
-      <button onclick="marcadorPunto('${d.id}','q',-1)" style="${btnStyleM('rgba(255,59,48,.6)')}">-1</button>
+      <button onclick="marcadorPunto('${d.id}','p',-1)" style="${btnStyleM('rgba(255,59,48,.6)')}">-1 P</button>
+      <button onclick="marcadorPunto('${d.id}','q',-1)" style="${btnStyleM('rgba(255,59,48,.6)')}">-1 Q</button>
     </div>` : '';
-    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em">${d.emoji} ${d.name}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold)">${total}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.08em">${d.emoji} ${d.name}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold)">${total}</div>
       </div>
-      <div style="display:flex;gap:12px;margin-top:4px;font-size:.72rem">
-        <span style="color:#00e676">⚡ Pruebas: ${s.p}</span>
-        <span style="color:#4da3ff">❓ Preguntas: ${s.q}</span>
+      <div style="display:flex;gap:12px;margin-top:2px;font-size:.7rem">
+        <span style="color:#00e676">⚡ ${s.p||0}</span>
+        <span style="color:#4da3ff">❓ ${s.q||0}</span>
       </div>
       ${adminBtns}
     </div>`;
   }).join('');
+
+  el.innerHTML = podioHtml + detalleHtml;
 }
 
 function marcadorPunto(id, tipo, delta) {
@@ -2840,24 +2877,33 @@ function _renderPreguntaRespuestas(q) {
 
 function _getPruebasData() {
   return [
-    {n:'1',e:'✈️', t:'Aeropuerto — Vender o morir', d:'Jor y Rafa venden un producto que os define (plátanos y latas de atún) como si vuestra vida dependiera de ello. El primero que consiga 3€ gana. 🏆 Ha ganado Rafa'},
-    {n:'2',e:'💃', t:'Batalla de baile', d:'Suena un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota. 🏆 Ha ganado Jor'},
-    {n:'3',e:'🤝', t:'Bienvenidas a la ONG', d:'Conseguid 2 solicitudes nuevas de amistad de 2 chicas. 🏆 Ha ganado Jorge'},
-    {n:'4',e:'📸', t:'Los más fotogénicos', d:'Foto vuestra con 1 morena, 1 rubia, 1 pelirroja y 1 africana.'},
-    {n:'5',e:'🎙️', t:'Orgullo nacional', d:'Narra el gol de Iniesta en el Mundial / gol de Mbappé o un ensayo para ganar el Six Nations.'},
-    {n:'6',e:'📱', t:'Ponte a la moda', d:'Graba un TikTok con un grupo de gente que veas por allí.'},
-    {n:'7',e:'🥃', t:'¿Agua o tequila?', d:'¿Quién es mejor detective? Adivina si estamos bebiendo agua o tequila. No puedes fallar o beberás tú también.'},
-    {n:'8',e:'🎭', t:'¿Quién soy?', d:'Un novio tiene que imitar a alguien. Si el otro no lo adivina, tienen que beber.'},
-    {n:'9',e:'💸', t:'El ofertitas', d:'Conseguid algo (cervezas, chupitos…) por menos precio del valor de venta. Si no, chupito.'},
-    {n:'10',e:'🇨🇿', t:'Checa tu checo', d:'En el bar, los novios deben pedir una ronda de cervezas en checo sin ayuda de nadie. Si fallan, brindis obligatorio y shot.'},
-    {n:'11',e:'🍺', t:'Test de cervezas', d:'Cata a ciegas de cervezas locales. Adivina el tipo o nombre. Si no acierta, castigo. Puntos conjuntos.'},
-    {n:'12',e:'🤕', t:'Finge la lesión', d:'Se les da un abanico de lesiones (esguince, tirón, fractura…). Cuando el grupo lo decida, tendrá que fingirla y exagerarla hasta que alguien le atienda.'},
-    {n:'13',e:'🏉', t:'Rugby en público', d:'Cartas con frases de rugby. Cuando el grupo lo decida, representar la acción en público: "Tackle him", "ENSAYO", "crouch bind set"…'},
-    {n:'14',e:'🌍', t:'Encuentra al compatriota', d:'Cada novio debe encontrar a alguien de su país (un francés y un dominicano) y convencerlos de cantar su himno nacional en la calle.'},
-    {n:'15',e:'🛍️', t:'Compra el mejor regalo', d:'Se le dan 200Kc. Comprad el souvenir más tripeador. El grupo vota. El perdedor tiene castigo.'},
-    {n:'16',e:'👮', t:'Foto con policía', d:'Sacarse una foto con un policía checo.'},
-    {n:'17',e:'🗣️', t:'Lección de idiomas', d:'Conseguir que un local os enseñe una palabra en checo.'},
-    {n:'18',e:'🍻', t:'Pivo!', d:'Encontrar un lugar con la palabra "pivo" (cerveza) y brindar allí.'},
+    {n:'1',e:'👮', t:'Presos y Policía', d:'Aprovechando los disfraces de presos y policía, hacéd como que habéis robado algo y el policía tendrá que deteneros. Prueba superada si alguien de la calle se lo cree.'},
+    {n:'2',e:'💒', t:'La boda', d:'Aprovechando los disfraces de Novias y Cura, tenéis que recrear una boda. Necesitáis una mujer cada novia que os acompañe al altar. El cura (Juan) os casará y podréis besaros. Tenéis que encontrar dos mujeres que os acompañen y una mujer que haga de ayudante del cura.'},
+    {n:'3',e:'💰', t:'Vendemotos', d:'Vais a tener que vender un producto que os define. Pocholo, Arroyo y Juan vais a tener que vender ese producto como si vuestra vida dependiera de ello. El primero que traiga 3 euros gana.'},
+    {n:'4',e:'💃', t:'Batalla de baile', d:'Sonará un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota quién gana.'},
+    {n:'5',e:'🤝', t:'Bienvenidas a qhelo!', d:'Tenéis que conseguir 2 solicitudes nuevas de amistad de 2 chicas. Quien consiga antes gana.'},
+    {n:'6',e:'📸', t:'Los más fotogénicos', d:'Queremos una foto vuestra con 1 morena, 1 rubia, 1 pelirroja y 1 africana.'},
+    {n:'7',e:'🎙️', t:'Orgullo nacional', d:'Tienes que narrar el gol de Iniesta en el Mundial, el gol de Mbappé o un ensayo para ganar el Six Nations.'},
+    {n:'8',e:'📱', t:'Ponte a la moda', d:'Graba un TikTok con un grupo de gente que veas por allí.'},
+    {n:'9',e:'🥃', t:'¿Agua o tequila?', d:'¿Quién es mejor detective? Adivina si estamos bebiendo agua o tequila. No puedes fallar o beberás tú también.'},
+    {n:'10',e:'🎭', t:'¿Quién soy?', d:'Un novio tiene que imitar a alguien y si el otro no lo adivina, tienen que beber.'},
+    {n:'11',e:'💸', t:'El ahorro y el gasto', d:'Tenéis que conseguir algo (cervezas, chupitos…) por menos precio del valor de venta. Si no, chupito.'},
+    {n:'12',e:'🇭🇺', t:'Checa tu húngaro', d:'En el bar, los novios deben pedir una ronda de cervezas en húngaro sin ayuda de nadie. Si fallan, brindis obligatorio y shot.'},
+    {n:'13',e:'🍺', t:'Test de cervezas', d:'Los novios deberán hacer una cata a ciegas de cervezas locales y adivinar el tipo o nombre. Si no acierta, castigo. Los puntos serán conjuntos. Si falla uno, punto para el marcador. Si acierta otro, resta un punto.'},
+    {n:'14',e:'🤕', t:'Finge la lesión', d:'Se les dará un abanico de lesiones (esguince, tirón, fractura…). Cuando el grupo lo decida, tendrá que apartarse, fingirla y exagerarla hasta que alguien le atienda.'},
+    {n:'15',e:'🏉', t:'Rugby en público', d:'Cartas con frases de rugby: "Tackle him", "crouch bind set", "USE IT NINE", "ENSAYO". Cuando el grupo lo decida, tiene que representar la acción en público de forma exagerada. "ENSAYO" = lanzarse al suelo como si hubiera marcado el ensayo de su vida. "crouch bind set" = agarrarse a una farola y empujar como en una melé.'},
+    {n:'16',e:'🌍', t:'Encuentra al compatriota', d:'Cada novio debe encontrar a alguien de su país (un español, un italiano y un árabe) y convencerlos de cantar su himno nacional con ellos en mitad de la calle. Se permite el móvil para la letra.'},
+    {n:'17',e:'🛍️', t:'Compra el mejor regalo', d:'Se le darán a cada novio 800HUF. Con ellas, deberán comprar el souvenir más tripeador. El grupo vota al ganador. El perdedor tiene castigo.'},
+    {n:'18',e:'👮', t:'Foto con policía húngaro', d:'Sacarse una foto con un policía húngaro.'},
+    {n:'19',e:'🗣️', t:'Lección de húngaro', d:'Conseguir que un local les enseñe una palabra en húngaro.'},
+    {n:'20',e:'🍻', t:'Sör!', d:'Encontrar un lugar con la palabra "sör" (cerveza en húngaro) y brindar allí.'},
+    {n:'21',e:'💋', t:'El beso del desconocido', d:'Hacer que una desconocida les dé un beso en la mejilla.'},
+    {n:'22',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'El día del barco, si pasáis cerca de otro barco de turistas, los novios deben gritar un saludo pirata. Si os responden: elegís a 5 del grupo para beber media cerveza. Si os ignoran: bebéis los novios.'},
+  ].map(p => {
+    const edit = window._notionEdits && window._notionEdits['prueba'+p.n];
+    return edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
+  });
+}
     {n:'19',e:'💋', t:'El beso del desconocido', d:'Hacer que un desconocido os dé un beso en la mejilla.'},
     {n:'20',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'Si pasáis cerca de otro barco de turistas, gritad un saludo pirata. Si os responden: 5 del grupo beben media cerveza. Si os ignoran: bebéis los novios.'},
   ].map(p => {
