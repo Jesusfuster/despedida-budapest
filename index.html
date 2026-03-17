@@ -1224,13 +1224,29 @@ function resetIdentity(){LS.del(LS_KEY);if(gpsWatchId!==null){try{navigator.geol
 
 document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='Enter')verifyPin();});
 
-// Poblar el select de nombres lo antes posible desde Firebase
-if (firebase && firebase.apps && firebase.apps.length) {
-  try { firebase.database().ref('gastosParticipantes').once('value', snap => { const d=snap.val(); if(d&&Array.isArray(d)){window._gastosParticipantes=d;actualizarSelectNombres();} }); } catch(e){}
-} else {
-  // Firebase aún no init — se poblará cuando initGastosParticipantes() se llame en initApp
-  setTimeout(()=>actualizarSelectNombres(), 2000);
-}
+// Inicializar Firebase temprano para poblar el select de nombres antes del login
+(function initFirebaseEarly() {
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({apiKey:"AIzaSyAHlLv8Jw467oEBHIK13j6BxVieAF7AuK4",authDomain:"despedida-budapest.firebaseapp.com",databaseURL:"https://despedida-budapest-default-rtdb.europe-west1.firebasedatabase.app",projectId:"despedida-budapest",storageBucket:"despedida-budapest.firebasestorage.app",messagingSenderId:"120000734551",appId:"1:120000734551:web:edf113d9a50a0bc23e4a12"});
+    }
+    firebase.database().ref('gastosParticipantes').once('value', snap => {
+      const d = snap.val();
+      const defaultList = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
+        'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+        'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+      window._gastosParticipantes = (d && Array.isArray(d)) ? d : defaultList;
+      if (!d) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
+      actualizarSelectNombres();
+    });
+  } catch(e) {
+    // Fallback con lista por defecto
+    window._gastosParticipantes = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
+      'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+      'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+    actualizarSelectNombres();
+  }
+})();
 
 // ════════════════════════════════════════════════════════
 // PLANNING DATA
