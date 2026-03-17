@@ -1866,7 +1866,7 @@ function saveNewPlan() {
   if (!title || !timeVal) { toast('⚠️ Pon título y fecha'); return; }
   const time = new Date(timeVal);
   const id = 'custom_' + Date.now();
-  const newItem = { id, day: ['MIÉ 18','JUE 19','VIE 20','SÁB 21','DOM 22'].find(d=>{const day=time.getDate();return(d.includes('18')&&day===18)||(d.includes('19')&&day===19)||(d.includes('20')&&day===20)||(d.includes('21')&&day===21)||(d.includes('22')&&day===22);})||'BUDAPEST', time, emoji: document.getElementById('np-emoji').value||'🎯', title, desc: document.getElementById('np-desc').value.trim(), descS: document.getElementById('np-descs').value.trim()||'¡Sorpresa!', loc: document.getElementById('np-loc').value.trim() };
+  const newItem = { id, day: ['MIÉ 18','JUE 19','VIE 20','SÁBADO 21','DOM 22'].find(d=>{const day=time.getDate();return(d.includes('18')&&day===18)||(d.includes('19')&&day===19)||(d.includes('20')&&day===20)||(d.includes('21')&&day===21)||(d.includes('22')&&day===22);})||'BUDAPEST', time, emoji: document.getElementById('np-emoji').value||'🎯', title, desc: document.getElementById('np-desc').value.trim(), descS: document.getElementById('np-descs').value.trim()||'¡Sorpresa!', loc: document.getElementById('np-loc').value.trim() };
   planItems.push(newItem); planItems.sort((a,b)=>a.time-b.time);
   if (firebase&&firebase.database) {
     firebase.database().ref('customPlans/'+id).set({...newItem,time:time.getTime()}).then(()=>toast('✅ Actividad añadida')).catch(()=>toast('✅ Guardado local'));
