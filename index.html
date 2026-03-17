@@ -982,7 +982,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   </div>
   <div style="padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0">
     <button id="modal-unlock-btn" onclick="modalToggleUnlock()" style="padding:13px;background:none;border:2px solid var(--accent2);border-radius:12px;color:var(--accent2);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer;-webkit-appearance:none;transition:all .2s">🔓 DESBLOQUEAR AHORA</button>
-    <button onclick="savePlanModal()" style="padding:14px;background:var(--gradient);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;cursor:pointer;-webkit-appearance:none">💾 GUARDAR</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="deletePlanItem()" style="padding:14px 16px;background:rgba(255,59,48,.12);border:1px solid rgba(255,59,48,.35);border-radius:12px;color:#ff3b30;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.06em;cursor:pointer;-webkit-appearance:none;flex-shrink:0">🗑</button>
+      <button onclick="savePlanModal()" style="flex:1;padding:14px;background:var(--gradient);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;cursor:pointer;-webkit-appearance:none">💾 GUARDAR</button>
+    </div>
   </div>
 </div>
 <div id="join-banner"></div>
@@ -1866,6 +1869,26 @@ function savePlanModal() {
     }).catch(e => toast('Error: ' + e.message));
   } else {
     prevUnlocked = new Set(); renderPlan(); closePlanModal(); toast('✅ Guardado (local)');
+  }
+}
+
+function deletePlanItem() {
+  if(!_modalItemId) return;
+  const item = planItems.find(i => i.id === _modalItemId);
+  if(!item) return;
+  if(!confirm('¿Eliminar "' + item.title + '"? No se puede deshacer.')) return;
+  planItems = planItems.filter(i => i.id !== _modalItemId);
+  // Si es custom (creado desde app), eliminarlo también de Firebase
+  if(firebase && firebase.database) {
+    if(_modalItemId.startsWith('custom_')) {
+      firebase.database().ref('customPlans/' + _modalItemId).remove();
+    }
+    const updated = planItems.map(i => ({...i, time: i.time.getTime()}));
+    firebase.database().ref('planning').set(updated).then(() => {
+      toast('🗑 Actividad eliminada'); closePlanModal(); prevUnlocked = new Set(); renderPlan();
+    });
+  } else {
+    prevUnlocked = new Set(); renderPlan(); closePlanModal(); toast('🗑 Eliminado (local)');
   }
 }
 
