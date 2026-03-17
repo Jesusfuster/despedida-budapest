@@ -1636,6 +1636,8 @@ function _btnParticipante(n, sel, color, isDespo) {
 function eliminarPersonaGasto(e, nombre) {
   e.stopPropagation();
   if (!isAdmin) return;
+  const PROTEGIDOS = ['Jesus','Arroyo','Pocholo','Juan Ayala'];
+  if (PROTEGIDOS.includes(nombre)) { toast('⚠️ ' + nombre + ' no se puede eliminar'); return; }
   if (!confirm('¿Eliminar a ' + nombre + ' de la lista?')) return;
   window._gastosParticipantes = (window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']]).filter(p=>p!==nombre);
   if (firebase&&firebase.database) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
