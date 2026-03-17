@@ -1665,6 +1665,145 @@ function loadCustomPlansFromFirebase() {
 
 
 // ═══════════════════════════════════════════════
+// SISTEMA DE PROPUESTAS (VOTACIÓN + RULETA)
+// ═══════════════════════════════════════════════
+let _propuestaActiva = null;
+let _miVoto = null;
+
+function initPropuestas() {
+  if (!firebase || !firebase.database) return;
+  firebase.database().ref('propuesta').on('value', snap => {
+    _propuestaActiva = snap.val();
+    renderPropuestaOverlay();
+  });
+}
+
+function openPropuesta() {
+  if (!isAdmin) return;
+  let m = document.getElementById('propuesta-selector');
+  if (!m) { m=document.createElement('div'); m.id='propuesta-selector'; m.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.88);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(m); }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.1em;color:var(--gold)">🎯 TIPO DE PROPUESTA</span>
+      <button onclick="document.getElementById('propuesta-selector').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <button onclick="openVotacion()" style="width:100%;padding:18px;background:rgba(30,111,255,.15);border:1px solid var(--accent);border-radius:12px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer;margin-bottom:10px;text-align:left">
+      🗳️ VOTACIÓN<br><span style="font-size:.7rem;color:var(--muted);font-family:'Inter',sans-serif;letter-spacing:0">Lanza una pregunta con opciones y todos votan en tiempo real</span>
+    </button>
+    <button onclick="openRuleta()" style="width:100%;padding:18px;background:rgba(191,90,242,.15);border:1px solid #bf5af2;border-radius:12px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer;text-align:left">
+      🎡 RULETA<br><span style="font-size:.7rem;color:var(--muted);font-family:'Inter',sans-serif;letter-spacing:0">Elige uno de los tres despedidos al azar — todos ven el resultado</span>
+    </button>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+function openVotacion() {
+  document.getElementById('propuesta-selector').style.display='none';
+  let m = document.getElementById('votacion-creator');
+  if (!m) { m=document.createElement('div'); m.id='votacion-creator'; m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(m); }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;color:var(--accent2)">🗳️ NUEVA VOTACIÓN</span>
+      <button onclick="document.getElementById('votacion-creator').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="margin-bottom:12px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">PREGUNTA</label>
+      <input id="vot-pregunta" placeholder="¿A qué bar vamos?" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;box-sizing:border-box;margin-top:4px"></div>
+    ${[1,2,3,4].map(i=>`<div style="margin-bottom:8px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">OPCIÓN ${i}</label>
+      <input id="vot-op${i}" placeholder="Opción ${i}${i>2?' (opcional)':''}" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px"></div>`).join('')}
+    <button onclick="lanzarVotacion()" style="width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer;margin-top:8px">🚀 LANZAR A TODOS</button>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+function lanzarVotacion() {
+  const q=document.getElementById('vot-pregunta').value.trim();
+  if(!q){toast('⚠️ Escribe la pregunta');return;}
+  const ops=[1,2,3,4].map(i=>document.getElementById('vot-op'+i).value.trim()).filter(Boolean);
+  if(ops.length<2){toast('⚠️ Mínimo 2 opciones');return;}
+  _miVoto=null;
+  firebase.database().ref('propuesta').set({tipo:'votacion',pregunta:q,opciones:ops,votos:{},activa:true,ts:Date.now()});
+  document.getElementById('votacion-creator').style.display='none';
+  toast('🗳️ Votación lanzada');
+}
+
+function votar(idx) {
+  if(_miVoto!==null) return;
+  _miVoto=idx;
+  firebase.database().ref('propuesta/votos/'+myId).set(idx);
+}
+
+function cerrarPropuesta() {
+  if(!isAdmin) return;
+  firebase.database().ref('propuesta').remove();
+  _propuestaActiva=null;
+  const ov=document.getElementById('propuesta-overlay');
+  if(ov) ov.style.display='none';
+}
+
+function openRuleta() {
+  document.getElementById('propuesta-selector').style.display='none';
+  let m=document.getElementById('ruleta-modal');
+  if(!m){m=document.createElement('div');m.id='ruleta-modal';m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;flex-direction:column';document.body.appendChild(m);}
+  const despos=['Arroyo','Juan Ayala','Pocholo'];
+  m.innerHTML=`<div style="text-align:center;padding:24px;width:100%;max-width:360px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.15em;color:var(--gold);margin-bottom:24px">🎡 RULETA</div>
+    <div id="ruleta-display" style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--text);min-height:72px;display:flex;align-items:center;justify-content:center;letter-spacing:.05em">${despos[Math.floor(Math.random()*3)]}</div>
+    <div id="ruleta-resultado" style="font-size:.8rem;color:var(--muted);margin:8px 0 24px;min-height:20px"></div>
+    <button id="ruleta-btn" onclick="girarRuleta()" style="width:100%;padding:16px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;cursor:pointer;margin-bottom:10px">🎲 GIRAR</button>
+    <button onclick="document.getElementById('ruleta-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer">Cancelar</button>
+  </div>`;
+  m.style.display='flex';
+}
+
+function girarRuleta() {
+  const despos=['Arroyo','Juan Ayala','Pocholo'],colores=['#4da3ff','#00e676','#bf5af2'];
+  const btn=document.getElementById('ruleta-btn'),display=document.getElementById('ruleta-display'),resultado=document.getElementById('ruleta-resultado');
+  if(!btn||!display) return;
+  btn.disabled=true;resultado.textContent='';display.style.color='var(--text)';
+  let ticks=0,totalTicks=25+Math.floor(Math.random()*15),ganador=Math.floor(Math.random()*3);
+  function tick(){
+    const idx=ticks%3;display.textContent=despos[idx];display.style.color=colores[idx];ticks++;
+    const delay=ticks<totalTicks*.5?80:ticks<totalTicks*.8?150:ticks<totalTicks?280:0;
+    if(ticks<totalTicks){setTimeout(tick,delay);}
+    else{
+      display.textContent=despos[ganador];display.style.color=colores[ganador];display.style.fontSize='3.5rem';
+      resultado.textContent='¡El elegido es '+despos[ganador]+'!';resultado.style.color=colores[ganador];
+      btn.disabled=false;btn.textContent='🎲 VOLVER A GIRAR';
+      if(firebase&&firebase.database) firebase.database().ref('propuesta').set({tipo:'ruleta',ganador:despos[ganador],color:colores[ganador],activa:true,ts:Date.now()});
+    }
+  }
+  tick();
+}
+
+function renderPropuestaOverlay() {
+  let ov=document.getElementById('propuesta-overlay');
+  if(!ov){ov=document.createElement('div');ov.id='propuesta-overlay';ov.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;flex-direction:column;padding:24px';document.body.appendChild(ov);}
+  if(!_propuestaActiva||!_propuestaActiva.activa){ov.style.display='none';return;}
+  ov.style.display='flex';
+  if(_propuestaActiva.tipo==='ruleta'){
+    ov.innerHTML=`<div style="text-align:center;max-width:340px">
+      <div style="font-size:.8rem;color:var(--muted);letter-spacing:.15em;margin-bottom:12px">🎡 RULETA</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:${_propuestaActiva.color||'var(--gold)'};letter-spacing:.05em">${_propuestaActiva.ganador}</div>
+      <div style="font-size:.9rem;color:var(--muted);margin-top:8px">¡El elegido!</div>
+      ${isAdmin?`<button onclick="cerrarPropuesta()" style="margin-top:24px;padding:10px 24px;background:none;border:1px solid var(--muted);border-radius:8px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:.9rem;cursor:pointer">✕ CERRAR</button>`:''}
+    </div>`;
+  } else if(_propuestaActiva.tipo==='votacion'){
+    const total=Object.keys(_propuestaActiva.votos||{}).length,ops=_propuestaActiva.opciones||[];
+    ov.innerHTML=`<div style="width:100%;max-width:420px">
+      <div style="font-size:.75rem;color:var(--muted);letter-spacing:.15em;margin-bottom:8px;text-align:center">🗳️ VOTACIÓN</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);margin-bottom:20px;text-align:center;letter-spacing:.06em">${_propuestaActiva.pregunta}</div>
+      ${ops.map((op,i)=>{const votos=Object.values(_propuestaActiva.votos||{}).filter(v=>v===i).length,pct=total>0?Math.round(votos/total*100):0,voted=_miVoto===i;
+        return `<button onclick="votar(${i})" style="width:100%;padding:12px 14px;background:${voted?'rgba(30,111,255,.25)':'var(--bg)'};border:1px solid ${voted?'var(--accent)':'var(--border)'};border-radius:10px;color:var(--text);text-align:left;cursor:pointer;margin-bottom:8px;position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;width:${pct}%;background:rgba(30,111,255,.12);border-radius:10px;transition:width .4s"></div>
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center"><span style="font-size:.88rem">${op}</span><span style="font-size:.78rem;color:var(--muted);min-width:32px;text-align:right">${total>0?pct+'%':''}</span></div>
+        </button>`;}).join('')}
+      <div style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:4px">${total} voto${total!==1?'s':''}</div>
+      ${isAdmin?`<button onclick="cerrarPropuesta()" style="width:100%;margin-top:16px;padding:10px;background:none;border:1px solid var(--muted);border-radius:8px;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:.9rem;cursor:pointer">✕ CERRAR VOTACIÓN</button>`:''}
+    </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
 function showAdminControls() {
   const btnLock = document.getElementById('btn-lockapp');
   const btnPlan = document.getElementById('btn-add-plan');
@@ -1753,7 +1892,7 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initPropuestas();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initPropuestas(); initPropuestas();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
