@@ -895,9 +895,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   <div class="splash-divider" id="splash-hint">o si eres el despedido</div>
   <div id="despo-btns" style="display:flex;flex-direction:column;gap:10px;width:min(320px,100%)">
     <div style="font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;text-align:center">¿Eres uno de los despedidos?</div>
-    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🎯 ARROYO</button>
-    <button class="btn-despo-name" onclick="enterDespo('Jayala')">🎯 JAYALA</button>
-    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🎯 POCHOLO</button>
+    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🎯 ARROYO <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Eva</span></button>
+    <button class="btn-despo-name" onclick="enterDespo('Juan Ayala')">🎯 JUAN AYALA <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Jazmín</span></button>
+    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🎯 POCHOLO <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Carlota</span></button>
   </div>
 </div>
 
@@ -1064,6 +1064,11 @@ function loadUnlocksFromFirebase() {
 // CONSTANTES
 // ════════════════════════════════════════════════════════
 const DESPEDIDOS=['arroyo','juan ayala','ayala','pocholo'];
+const PAREJAS = {
+  'Pocholo': 'Carlota',
+  'Juan Ayala': 'Jazmín',
+  'Arroyo': 'Eva'
+};
 const COLORS=['#1e6fff','#00e676','#ffd700','#4da3ff','#ff69b4','#bf5af2','#ff8c00','#00e5ff'];
 const EMOJIS=['🦁','🐺','🦊','🦅','🐯','🦈','🐻','🦉'];
 const ME_COLOR='#1e6fff';
@@ -1328,6 +1333,7 @@ function renderInfo() {
       const r = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
       const d = await r.json();
       const rate = d.rates && d.rates.HUF ? Math.round(d.rates.HUF) : 388;
+      window._hufRate = rate;
       document.getElementById('huf-rate').textContent = '1 € = ' + rate + ' Ft';
       document.getElementById('huf-updated').textContent = 'Actualizado ahora';
     } catch(e) {
@@ -1354,10 +1360,19 @@ function renderInfo() {
       <div class="info-card-title">💱 Tipo de Cambio</div>
       <div id="huf-rate" style="font-size:2rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);margin:8px 0">1 € = ... Ft</div>
       <div id="huf-updated" style="font-size:.6rem;color:var(--muted)">Cargando...</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.6">
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input id="conv-input" type="number" placeholder="Cantidad" oninput="convertCurrency()" style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;min-width:0">
+          <select id="conv-dir" onchange="convertCurrency()" style="padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;cursor:pointer">
+            <option value="ft2eur">Ft → €</option>
+            <option value="eur2ft">€ → Ft</option>
+          </select>
+        </div>
+        <div id="conv-result" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--gold);text-align:center;min-height:2rem"></div>
+      </div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:10px;line-height:1.6">
         💡 Sáb y Dom = mal cambio en Revolut<br>
-        💡 Tener algo de efectivo por si acaso<br>
-        💡 1000 Ft ≈ 2.5€ · 5000 Ft ≈ 13€ · 10000 Ft ≈ 26€
+        💡 Tener algo de efectivo por si acaso
       </div>
     </div>
 
@@ -1377,6 +1392,19 @@ function renderInfo() {
   `;
 
   fetchRate();
+}
+
+function convertCurrency() {
+  const input = parseFloat(document.getElementById('conv-input').value);
+  const dir = document.getElementById('conv-dir').value;
+  const el = document.getElementById('conv-result');
+  const rate = window._hufRate || 390;
+  if (!input || isNaN(input)) { el.textContent = ''; return; }
+  if (dir === 'ft2eur') {
+    el.textContent = (input / rate).toFixed(2) + ' €';
+  } else {
+    el.textContent = Math.round(input * rate).toLocaleString() + ' Ft';
+  }
 }
 
 function initApp(){
@@ -1819,10 +1847,48 @@ function openNotionModal(type, title) {
   const body = document.getElementById('notion-modal-body');
   if (type === 'pruebas') body.innerHTML = _pruebas_html();
   else body.innerHTML = _preguntas_html();
+  // Botón añadir pregunta (solo admin, solo en preguntas)
+  let addBtn = document.getElementById('notion-add-btn');
+  if (isAdmin && type === 'preguntas') {
+    if (!addBtn) {
+      addBtn = document.createElement('button');
+      addBtn.id = 'notion-add-btn';
+      addBtn.style.cssText = 'width:calc(100% - 28px);margin:10px 14px;padding:12px;background:rgba(30,111,255,.15);border:1px dashed var(--accent);border-radius:10px;color:var(--accent2);font-family:\'Bebas Neue\',sans-serif;font-size:.9rem;letter-spacing:.08em;cursor:pointer;display:block';
+      addBtn.textContent = '+ AÑADIR NUEVA PREGUNTA';
+      addBtn.onclick = () => addNewPregunta();
+      m.appendChild(addBtn);
+    }
+    addBtn.style.display = 'block';
+  } else if (addBtn) {
+    addBtn.style.display = 'none';
+  }
   m.style.display = 'flex';
 }
 
-function _getPruebasData() {
+function addNewPregunta() {
+  // Añadir pregunta vacía al array de edits en Firebase
+  const qs = _getPreguntasData();
+  const newId = qs.length + 1;
+  const data = { q: 'Nueva pregunta', a1: 'Respuesta A', a2: 'Respuesta B' };
+  window._notionEdits = window._notionEdits || {};
+  window._notionEdits['pregunta'+newId] = data;
+  if(firebase&&firebase.database) firebase.database().ref('edits/preguntas/'+newId).set(data);
+  document.getElementById('notion-modal-body').innerHTML = _preguntas_html();
+  toast('✅ Pregunta añadida — edítala con ✏️');
+}
+
+function deletePregunta(id) {
+  if(!isAdmin) return;
+  if(!confirm('¿Eliminar pregunta '+id+'?')) return;
+  // Marcar como eliminada en Firebase
+  window._notionEdits = window._notionEdits || {};
+  window._notionEdits['pregunta'+id] = { deleted: true };
+  if(firebase&&firebase.database) firebase.database().ref('edits/preguntas/'+id).set({ deleted: true });
+  document.getElementById('notion-modal-body').innerHTML = _preguntas_html();
+  toast('🗑 Pregunta eliminada');
+}
+
+
   return [
     {n:'1',e:'✈️', t:'Aeropuerto — Vender o morir', d:'Jor y Rafa venden un producto que os define (plátanos y latas de atún) como si vuestra vida dependiera de ello. El primero que consiga 3€ gana. 🏆 Ha ganado Rafa'},
     {n:'2',e:'💃', t:'Batalla de baile', d:'Suena un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota. 🏆 Ha ganado Jor'},
@@ -1876,8 +1942,8 @@ function _getPreguntasData() {
     {q:'¿Cuántas palas de pádel ha tenido Jor en 5 años?', a1:'Paula: 5', a2:'Teresa: 3 o 4…'},
   ].map((q,i) => {
     const edit = window._notionEdits && window._notionEdits['pregunta'+(i+1)];
-    return edit ? {...q, q: edit.q||q.q, a1: edit.a1||q.a1, a2: edit.a2||q.a2} : q;
-  });
+    return edit ? {...q, q: edit.q||q.q, a1: edit.a1||q.a1, a2: edit.a2||q.a2, deleted: edit.deleted} : q;
+  }).filter(q => !q.deleted);
 }
 function _pruebas_html() {
   const pruebas = _getPruebasData();
@@ -1909,6 +1975,7 @@ function _preguntas_html() {
         <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
           <button onclick="editNotionItem('pregunta','${i+1}')" style="background:rgba(30,111,255,.15);border:1px solid var(--accent);border-radius:8px;color:var(--accent2);font-size:.7rem;padding:4px 8px;cursor:pointer">✏️</button>
           <button onclick="toggleLockItem('pregunta','${i+1}')" style="background:${locked?'rgba(255,60,60,.15)':'rgba(255,215,0,.1)'};border:1px solid ${locked?'rgba(255,60,60,.4)':'rgba(255,215,0,.3)'};border-radius:8px;color:${locked?'#ff6b6b':'var(--gold)'};font-size:.7rem;padding:4px 8px;cursor:pointer">${locked?'🔓':'🔒'}</button>
+          <button onclick="deletePregunta('${i+1}')" style="background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);border-radius:8px;color:#ff6b6b;font-size:.7rem;padding:4px 8px;cursor:pointer">🗑</button>
         </div>` : '';
       return `<div style="background:var(--surface);border:1px solid ${locked?'rgba(255,60,60,.3)':'var(--border)'};border-radius:12px;padding:14px;opacity:${locked?'0.45':'1'}">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:${locked?'0':'8px'}">
