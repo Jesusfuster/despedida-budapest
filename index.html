@@ -1159,7 +1159,7 @@ function verifyPin(){
 function launchApp(name,pinOk,adminMode){
   myName=name;myIsDespo=isDespedido(name);
   try{const s=localStorage.getItem(LS_KEY+'_id');if(s&&s.startsWith('u_')){myId=s;}else{myId='u_'+name.toLowerCase().replace(/\W/g,'').slice(0,8)+'_'+Math.random().toString(36).slice(2,5);localStorage.setItem(LS_KEY+'_id',myId);}}catch(e){myId='u_'+name.toLowerCase().replace(/\W/g,'').slice(0,8)+'_'+Math.random().toString(36).slice(2,5);}
-  if(adminMode){isAdmin=true;}
+  if(adminMode){isAdmin=true;}else{isAdmin=false;}
   if(pinOk){LS.set(LS_KEY,JSON.stringify({name,pinOk,adminMode:!!adminMode}));}else{LS.del(LS_KEY);}
   document.getElementById('hdr-name').textContent=name;
   document.getElementById('splash').classList.add('hide');
