@@ -2042,15 +2042,15 @@ function openNotionModal(type, title) {
 }
 
 function addNewPregunta() {
-  // Añadir pregunta vacía al array de edits en Firebase
+  // Calcular el nuevo ID
   const qs = _getPreguntasData();
-  const newId = qs.length + 1;
-  const data = { q: 'Nueva pregunta', a1: 'Respuesta A', a2: 'Respuesta B' };
+  const newId = String(qs.length + 1);
+  // Crear entrada vacía en edits
   window._notionEdits = window._notionEdits || {};
-  window._notionEdits['pregunta'+newId] = data;
-  if(firebase&&firebase.database) firebase.database().ref('edits/preguntas/'+newId).set(data);
-  document.getElementById('notion-modal-body').innerHTML = _preguntas_html();
-  toast('✅ Pregunta añadida — edítala con ✏️');
+  window._notionEdits['pregunta'+newId] = { q: '', arroyo:'', eva:'', juan:'', jazmin:'', pocholo:'', carlota:'' };
+  // Abrir modal de edición directamente
+  _editData = window._notionEdits['pregunta'+newId];
+  editNotionItem('pregunta', newId);
 }
 
 function deletePregunta(id) {
