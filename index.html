@@ -2261,7 +2261,7 @@ function getState(item){
   if(_manualUnlocks.has(item.id))return'unlocked';
   return'locked';
 }
-function msToUnlock(item){return new Date(item.time-15*60*1000)-new Date();}
+function msToUnlock(item){const u=new Date(item.time);u.setHours(8,30,0,0);return u-new Date();}
 function fmtCd(ms){if(ms<=0)return'00:00';const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);return h>0?h+'h '+(m%60)+'m':m+'m '+(s%60)+'s';}
 
 function renderPlan(){
