@@ -955,14 +955,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
       <div class="plan-h" style="font-size:1.5rem">🏦 BANCO DE BUDAPUTES</div>
       <div class="plan-d" style="margin-bottom:14px">BUDAPEST · 19-22 MARZO 2026</div>
       <div style="display:flex;gap:12px;align-items:flex-start">
-        <!-- COLUMNA IZQUIERDA: lista de gastos -->
-        <div style="flex:1;min-width:0">
+        <!-- COLUMNA IZQUIERDA 2/3: lista de gastos -->
+        <div style="flex:2;min-width:0">
           <div style="font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-bottom:8px">GASTOS</div>
           <div id="banco-lista"></div>
           <button onclick="openAddGasto()" style="width:100%;margin-top:8px;padding:11px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:10px;color:#00e676;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.1em;cursor:pointer">+ AÑADIR GASTO</button>
         </div>
-        <!-- COLUMNA DERECHA: resumen -->
-        <div style="width:200px;flex-shrink:0">
+        <!-- COLUMNA DERECHA 1/3: resumen -->
+        <div style="flex:1;min-width:0">
           <div style="font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-bottom:8px">RESUMEN</div>
           <div id="banco-resumen"></div>
           <div style="font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin:12px 0 8px">A PAGAR</div>
@@ -1642,10 +1642,11 @@ function calcularLiquidacion(gastos) {
 }
 
 function renderGastos() {
-  const lista = document.getElementById('banco-lista');
-  const resumen = document.getElementById('banco-resumen');
-  const liquid = document.getElementById('banco-liquidacion');
-  if (!lista) return;
+  // Si los divs no están en DOM aún (panel no activo), guardar para cuando se abra
+  let lista = document.getElementById('banco-lista');
+  let resumen = document.getElementById('banco-resumen');
+  let liquid = document.getElementById('banco-liquidacion');
+  if (!lista) return; // panel no montado todavía, se renderizará al hacer switchTab('banco')
   const gastos = Object.values(_gastos).sort((a,b)=>a.ts-b.ts);
 
   // ── LISTA IZQUIERDA ──
@@ -2172,7 +2173,7 @@ function loadPlanFromFirebase(){if(!firebase||!firebase.database)return;firebase
 // ════════════════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════════════════
-function switchTab(name){['map','crew','plan','banco','info'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);if(name==='banco')renderGastos();}
+function switchTab(name){['map','crew','plan','banco','info'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('active',t===name);document.getElementById('panel-'+t).classList.toggle('active',t===name);});if(name==='map')setTimeout(()=>{if(leafletMap)leafletMap.invalidateSize();},80);if(name==='banco')setTimeout(renderGastos,50);}
 
 // ════════════════════════════════════════════════════════
 // ADMIN PANEL
