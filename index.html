@@ -896,9 +896,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   <div class="splash-divider" id="splash-hint">o si eres el despedido</div>
   <div id="despo-btns" style="display:flex;flex-direction:column;gap:10px;width:min(320px,100%)">
     <div style="font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;text-align:center">¿Eres uno de los despedidos?</div>
-    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🎯 ARROYO <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Eva</span></button>
-    <button class="btn-despo-name" onclick="enterDespo('Juan Ayala')">🎯 JUAN AYALA <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Jazmín</span></button>
-    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🎯 POCHOLO <span style="font-size:.6rem;opacity:.6;margin-left:4px">& Carlota</span></button>
+    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🎯 ARROYO</button>
+    <button class="btn-despo-name" onclick="enterDespo('Juan Ayala')">🎯 JUAN AYALA</button>
+    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🎯 POCHOLO</button>
   </div>
 </div>
 
@@ -1498,16 +1498,16 @@ function loadCustomPlansFromFirebase() {
 
 
 // ═══════════════════════════════════════════════
+function showAdminControls() {
+  if (!isAdmin) return;
+  const btnLock = document.getElementById('btn-lockapp');
+  if (btnLock) btnLock.style.display = 'block';
+  const btnPlan = document.getElementById('btn-add-plan');
+  if (btnPlan) { btnPlan.style.display = 'flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
+}
+
 function initAppLock() {
-  // Mostrar botón solo si admin
-  if (isAdmin) {
-    const btn = document.getElementById('btn-lockapp');
-    if (btn) btn.style.display = 'block';
-    const btnPlan = document.getElementById('btn-add-plan');
-    if (btnPlan) btnPlan.style.display = 'flex';
-    btnPlan.style.alignItems = 'center';
-    btnPlan.style.justifyContent = 'center';
-  }
+  showAdminControls();
   // Escuchar cambios en Firebase
   if (firebase && firebase.database) {
     firebase.database().ref('appLocked').on('value', snap => {
@@ -1946,14 +1946,12 @@ function editNotionItem(type, id) {
       <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">PREGUNTA</label>
       <input id="en-q" value="${(_editData.q||'').replace(/"/g,'&quot;')}" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;box-sizing:border-box;margin-top:4px">
     </div>
-    <div style="margin-bottom:12px">
-      <label style="font-size:.7rem;color:var(--muted);letter-spacing:.1em;color:var(--accent2)">RAFA/JOR dice</label>
-      <textarea id="en-a1" rows="3" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--accent);border-radius:8px;color:var(--text);font-size:.78rem;box-sizing:border-box;margin-top:4px;resize:vertical">${_editData.a1||''}</textarea>
-    </div>
-    <div style="margin-bottom:12px">
-      <label style="font-size:.7rem;color:var(--gold);letter-spacing:.1em">TERE/PAULA contesta</label>
-      <textarea id="en-a2" rows="3" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--gold);border-radius:8px;color:var(--text);font-size:.78rem;box-sizing:border-box;margin-top:4px;resize:vertical">${_editData.a2||''}</textarea>
-    </div>`;
+    <div style="font-size:.68rem;color:var(--muted);margin-bottom:8px">Deja vacío un campo para que use el mismo texto que el anterior.</div>
+    ${[['arroyo','#4da3ff','Arroyo'],['eva','var(--gold)','Eva'],['juan','#00e676','Juan Ayala'],['jazmin','var(--gold)','Jazmín'],['pocholo','#bf5af2','Pocholo'],['carlota','var(--gold)','Carlota']].map(([id,color,name])=>`
+    <div style="margin-bottom:8px">
+      <label style="font-size:.68rem;color:${color};letter-spacing:.08em;font-weight:700">${name}</label>
+      <textarea id="en-${id}" rows="2" style="width:100%;padding:8px;background:var(--bg);border:1px solid ${color.startsWith('#')?color:'rgba(255,215,0,.4)'};border-radius:8px;color:var(--text);font-size:.78rem;box-sizing:border-box;margin-top:3px;resize:vertical">${_editData[id]||''}</textarea>
+    </div>`).join('')}`;
   m.innerHTML = `
     <div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:85vh;overflow-y:auto">
       <div style="display:flex;align-items:center;margin-bottom:16px">
@@ -1973,7 +1971,15 @@ function saveNotionEdit() {
   if(_editType==='prueba') {
     data = { t: document.getElementById('en-title').value, d: document.getElementById('en-desc').value };
   } else {
-    data = { q: document.getElementById('en-q').value, a1: document.getElementById('en-a1').value, a2: document.getElementById('en-a2').value };
+    data = {
+      q: document.getElementById('en-q').value,
+      arroyo: document.getElementById('en-arroyo').value,
+      eva: document.getElementById('en-eva').value,
+      juan: document.getElementById('en-juan').value,
+      jazmin: document.getElementById('en-jazmin').value,
+      pocholo: document.getElementById('en-pocholo').value,
+      carlota: document.getElementById('en-carlota').value,
+    };
   }
   // Guardar en Firebase y local
   window._notionEdits = window._notionEdits || {};
@@ -2058,7 +2064,46 @@ function deletePregunta(id) {
   toast('🗑 Pregunta eliminada');
 }
 
-function _getPruebasData() {
+function _renderPreguntaRespuestas(q) {
+  // Cada pregunta tiene respuestas por pareja: {novio, novia, rNovio, rNovia}
+  // Si rNovio === rNovia → un solo bocadillo conjunto
+  // Si son distintas → dos bocadillos separados
+  const parejas = [
+    { novio:'Arroyo', novia:'Eva', rNovio: q.arroyo||q.a1, rNovia: q.eva||q.a2 },
+    { novio:'Juan Ayala', novia:'Jazmín', rNovio: q.juan||q.a1, rNovia: q.jazmin||q.a2 },
+    { novio:'Pocholo', novia:'Carlota', rNovio: q.pocholo||q.a1, rNovia: q.carlota||q.a2 },
+  ];
+  // Colores por pareja
+  const colors = [
+    { bg:'rgba(30,111,255,.08)', border:'rgba(30,111,255,.25)', label:'#4da3ff' },
+    { bg:'rgba(0,230,118,.07)', border:'rgba(0,230,118,.2)', label:'#00e676' },
+    { bg:'rgba(191,90,242,.08)', border:'rgba(191,90,242,.2)', label:'#bf5af2' },
+  ];
+  const noviaColor = 'rgba(255,215,0,.06)';
+
+  return parejas.map((p, idx) => {
+    const c = colors[idx];
+    const mismas = p.rNovio === p.rNovia;
+    if (mismas) {
+      // Respuesta igual → un bocadillo con ambos nombres
+      return `<div style="font-size:.75rem;padding:8px 10px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;margin-bottom:6px;line-height:1.6">
+        <span style="color:${c.label};font-weight:700">${p.novio} & ${p.novia}: </span>${p.rNovio}
+      </div>`;
+    } else {
+      // Respuestas distintas → dos bocadillos
+      return `<div style="margin-bottom:8px">
+        <div style="font-size:.75rem;padding:7px 10px;background:${c.bg};border:1px solid ${c.border};border-radius:8px 8px 0 0;line-height:1.5">
+          <span style="color:${c.label};font-weight:700">${p.novio}: </span>${p.rNovio}
+        </div>
+        <div style="font-size:.75rem;padding:7px 10px;background:${noviaColor};border:1px solid rgba(255,215,0,.2);border-radius:0 0 8px 8px;line-height:1.5;border-top:none">
+          <span style="color:var(--gold);font-weight:700">${p.novia}: </span>${p.rNovia}
+        </div>
+      </div>`;
+    }
+  }).join('');
+}
+
+
   return [
     {n:'1',e:'✈️', t:'Aeropuerto — Vender o morir', d:'Jor y Rafa venden un producto que os define (plátanos y latas de atún) como si vuestra vida dependiera de ello. El primero que consiga 3€ gana. 🏆 Ha ganado Rafa'},
     {n:'2',e:'💃', t:'Batalla de baile', d:'Suena un tema y tenéis que hacer una batalla alternándoos cada varios segundos. El grupo vota. 🏆 Ha ganado Jor'},
@@ -2112,7 +2157,7 @@ function _getPreguntasData() {
     {q:'¿Cuántas palas de pádel ha tenido Jor en 5 años?', a1:'Paula: 5', a2:'Teresa: 3 o 4…'},
   ].map((q,i) => {
     const edit = window._notionEdits && window._notionEdits['pregunta'+(i+1)];
-    return edit ? {...q, q: edit.q||q.q, a1: edit.a1||q.a1, a2: edit.a2||q.a2, deleted: edit.deleted} : q;
+    return edit ? {...q, ...edit} : q;
   }).filter(q => !q.deleted);
 }
 function _pruebas_html() {
@@ -2148,17 +2193,11 @@ function _preguntas_html() {
           <button onclick="deletePregunta('${i+1}')" style="background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);border-radius:8px;color:#ff6b6b;font-size:.7rem;padding:4px 8px;cursor:pointer">🗑</button>
         </div>` : '';
       return `<div style="background:var(--surface);border:1px solid ${locked?'rgba(255,60,60,.3)':'var(--border)'};border-radius:12px;padding:14px;opacity:${locked?'0.45':'1'}">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:${locked?'0':'8px'}">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:${locked?'0':'10px'}">
           <span style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:${locked?'var(--muted)':'var(--gold)'};letter-spacing:.06em;flex:1">${i+1}. ${locked&&!isAdmin?'???':q.q}</span>
           ${adminBtns}
         </div>
-        ${locked&&!isAdmin?'':` 
-        <div style="font-size:.75rem;padding:8px;background:rgba(30,111,255,.08);border-radius:8px;margin-bottom:6px;line-height:1.5">
-          <span style="color:var(--accent2);font-weight:700">RAFA/JOR dice: </span>${q.a1}
-        </div>
-        <div style="font-size:.75rem;padding:8px;background:rgba(255,215,0,.06);border-radius:8px;line-height:1.5">
-          <span style="color:var(--gold);font-weight:700">TERE/PAULA contesta: </span>${q.a2}
-        </div>`}
+        ${locked&&!isAdmin?'':_renderPreguntaRespuestas(q)}
       </div>`;
     }).join('') + '</div>';
 }
