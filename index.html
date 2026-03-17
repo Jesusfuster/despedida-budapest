@@ -1396,6 +1396,13 @@ function renderInfo() {
       <div id="marcador-content" style="margin-top:4px">Cargando...</div>
     </div>
 
+    <!-- GASTOS -->
+    <div class="info-card">
+      <div class="info-card-title">💸 Gastos</div>
+      <div id="gastos-content" style="margin-top:4px">Cargando...</div>
+      <button onclick="openAddGasto()" style="width:100%;margin-top:10px;padding:11px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:10px;color:#00e676;font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.1em;cursor:pointer">+ AÑADIR GASTO</button>
+    </div>
+
     <!-- MAPA -->
     <div class="info-card">
       <div class="info-card-title">🗺️ Mapa Budapest</div>
@@ -1406,6 +1413,7 @@ function renderInfo() {
 
   fetchRate();
   renderMarcador();
+  renderGastos();
 }
 
 // ═══════════════════════════════════════════════
@@ -1665,6 +1673,142 @@ function loadCustomPlansFromFirebase() {
 
 
 // ═══════════════════════════════════════════════
+// GASTOS COMPARTIDOS
+// ═══════════════════════════════════════════════
+let _gastos = {};
+
+function initGastos() {
+  if (!firebase || !firebase.database) return;
+  firebase.database().ref('gastos').on('value', snap => {
+    _gastos = snap.val() || {};
+    renderGastos();
+  });
+}
+
+function openAddGasto(editId) {
+  const editando = editId ? _gastos[editId] : null;
+  let m = document.getElementById('gasto-modal');
+  if (!m) { m=document.createElement('div'); m.id='gasto-modal'; m.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.88);display:flex;align-items:flex-end;justify-content:center'; document.body.appendChild(m); }
+  const todos = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
+    'Primo Jay','Primo Kike','Adri','Jayala','Juan','Arroyo','Pocholo','Adrian','Bazan','Mick',
+    'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+  const partSel = editando ? editando.participantes : [];
+  m.innerHTML = `<div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:20px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;color:#00e676">💸 ${editando?'EDITAR':'NUEVO'} GASTO</span>
+      <button onclick="document.getElementById('gasto-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="margin-bottom:10px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">DESCRIPCIÓN</label>
+      <input id="g-desc" value="${editando?editando.desc:''}" placeholder="Ej: Bolera, Cena Fuego..." style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px"></div>
+    <div style="margin-bottom:10px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">PAGÓ</label>
+      <select id="g-paga" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px">
+        ${todos.map(n=>`<option value="${n}" ${(editando?editando.paga:myName)===n?'selected':''}>${n}</option>`).join('')}
+      </select></div>
+    <div style="margin-bottom:10px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">IMPORTE (€)</label>
+      <input id="g-importe" type="number" step="0.01" value="${editando?editando.importe:''}" placeholder="0.00" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.88rem;box-sizing:border-box;margin-top:4px"></div>
+    <div style="margin-bottom:14px"><label style="font-size:.68rem;color:var(--muted);letter-spacing:.1em">ENTRE QUIÉNES (deja vacío = todos)</label>
+      <div id="g-participantes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        ${todos.map(n=>{const sel=partSel.includes(n);return`<button onclick="toggleParticipante(this)" data-name="${n}" style="padding:5px 10px;background:${sel?'rgba(0,230,118,.25)':'rgba(255,255,255,.06)'};border:1px solid ${sel?'#00e676':'var(--border)'};border-radius:20px;color:${sel?'#00e676':'var(--muted)'};font-size:.72rem;cursor:pointer">${n}</button>`;}).join('')}
+      </div></div>
+    <button onclick="guardarGasto('${editId||''}')" style="width:100%;padding:14px;background:linear-gradient(90deg,#00e676,#1e6fff);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">💾 GUARDAR GASTO</button>
+  </div>`;
+  m.style.display = 'flex';
+}
+
+function toggleParticipante(btn) {
+  const active = btn.style.background.includes('0.25') || btn.style.background.includes('.25');
+  btn.style.background = active ? 'rgba(255,255,255,.06)' : 'rgba(0,230,118,.25)';
+  btn.style.color = active ? 'var(--muted)' : '#00e676';
+  btn.style.borderColor = active ? 'var(--border)' : '#00e676';
+}
+
+function guardarGasto(editId) {
+  const desc = document.getElementById('g-desc').value.trim();
+  const paga = document.getElementById('g-paga').value;
+  const importe = parseFloat(document.getElementById('g-importe').value);
+  if (!desc) { toast('⚠️ Añade una descripción'); return; }
+  if (!importe || importe <= 0) { toast('⚠️ Importe inválido'); return; }
+  const btns = document.querySelectorAll('#g-participantes button');
+  let participantes = [...btns].filter(b=>b.style.background.includes('0.25')||b.style.background.includes('.25')).map(b=>b.dataset.name);
+  if (participantes.length === 0) participantes = [...btns].map(b=>b.dataset.name);
+  const id = editId || ('g_' + Date.now());
+  firebase.database().ref('gastos/' + id).set({ id, desc, paga, importe, participantes, ts: editId ? (_gastos[editId]?.ts||Date.now()) : Date.now() });
+  document.getElementById('gasto-modal').style.display = 'none';
+  toast(editId ? '✅ Gasto actualizado' : '✅ Gasto añadido');
+}
+
+let _deleteTimer = null;
+function startDeleteGasto(id, btn) {
+  btn.style.color = 'rgba(255,59,48,.8)';
+  btn.textContent = '⏳';
+  _deleteTimer = setTimeout(()=>{
+    if (!confirm('¿Eliminar este gasto?')) { cancelDeleteGasto(btn); return; }
+    firebase.database().ref('gastos/' + id).remove();
+    toast('🗑 Gasto eliminado');
+  }, 1500);
+}
+function cancelDeleteGasto(btn) {
+  clearTimeout(_deleteTimer);
+  if (btn) { btn.style.color = 'rgba(255,59,48,.4)'; btn.textContent = '🗑'; }
+}
+
+function calcularLiquidacion(gastos) {
+  const balances = {};
+  Object.values(gastos).forEach(g => {
+    const partes = g.participantes.length;
+    const porPersona = g.importe / partes;
+    if (!balances[g.paga]) balances[g.paga] = 0;
+    balances[g.paga] += g.importe;
+    g.participantes.forEach(p => { if (!balances[p]) balances[p]=0; balances[p]-=porPersona; });
+  });
+  const pos = Object.entries(balances).filter(([,v])=>v>0.01).sort((a,b)=>b[1]-a[1]).map(([n,v])=>({n,v}));
+  const neg = Object.entries(balances).filter(([,v])=>v<-0.01).sort((a,b)=>a[1]-b[1]).map(([n,v])=>({n,v:Math.abs(v)}));
+  const trans=[]; let i=0,j=0;
+  while(i<pos.length&&j<neg.length){
+    const amt=Math.min(pos[i].v,neg[j].v);
+    if(amt>0.01) trans.push({de:neg[j].n,a:pos[i].n,amt});
+    pos[i].v-=amt; neg[j].v-=amt;
+    if(pos[i].v<0.01)i++; if(neg[j].v<0.01)j++;
+  }
+  return trans;
+}
+
+function renderGastos() {
+  const el = document.getElementById('gastos-content');
+  if (!el) return;
+  const lista = Object.values(_gastos).sort((a,b)=>a.ts-b.ts);
+  if (lista.length === 0) { el.innerHTML=`<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:12px 0">Sin gastos todavía</div>`; return; }
+  const total = lista.reduce((s,g)=>s+g.importe,0);
+  const trans = calcularLiquidacion(_gastos);
+  el.innerHTML = `
+    <div style="margin-bottom:12px">
+      ${lista.map(g=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.83rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.desc}</div>
+            <div style="font-size:.7rem;color:var(--muted)">${g.paga} pagó · ${g.participantes.length} pers.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:8px">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#00e676">${g.importe.toFixed(2)}€</span>
+            <button onclick="openAddGasto('${g.id}')" style="background:none;border:none;color:rgba(77,163,255,.6);cursor:pointer;font-size:.82rem;padding:4px" title="Editar">✏️</button>
+            <button onmousedown="startDeleteGasto('${g.id}',this)" onmouseup="cancelDeleteGasto(this)" onmouseleave="cancelDeleteGasto(this)" ontouchstart="startDeleteGasto('${g.id}',this)" ontouchend="cancelDeleteGasto(this)" style="background:none;border:none;color:rgba(255,59,48,.4);cursor:pointer;font-size:.82rem;padding:4px" title="Mantén pulsado 1.5s para eliminar">🗑</button>
+          </div>
+        </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-family:'Bebas Neue',sans-serif">
+        <span style="color:var(--muted);font-size:.8rem">TOTAL</span>
+        <span style="color:var(--gold);font-size:1.1rem">${total.toFixed(2)}€</span>
+      </div>
+    </div>
+    ${trans.length>0?`
+    <div style="background:rgba(30,111,255,.08);border:1px solid rgba(30,111,255,.2);border-radius:10px;padding:12px">
+      <div style="font-size:.68rem;color:var(--accent);letter-spacing:.1em;margin-bottom:8px">💡 LIQUIDACIÓN</div>
+      ${trans.map(t=>`<div style="font-size:.8rem;color:var(--text);padding:4px 0;display:flex;justify-content:space-between">
+        <span>${t.de} → ${t.a}</span><span style="color:#00e676;font-family:'Bebas Neue',sans-serif">${t.amt.toFixed(2)}€</span>
+      </div>`).join('')}
+    </div>`:`<div style="font-size:.75rem;color:#00e676;text-align:center;padding:8px">✅ Todo cuadrado</div>`}`;
+}
+
+// ═══════════════════════════════════════════════
 // SISTEMA DE PROPUESTAS (VOTACIÓN + RULETA)
 // ═══════════════════════════════════════════════
 let _propuestaActiva = null;
@@ -1892,7 +2036,7 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initPropuestas(); initPropuestas();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initPropuestas(); initGastos(); initPropuestas();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
