@@ -1389,6 +1389,12 @@ function renderInfo() {
       <button class="info-btn" onclick="openNotionModal('preguntas','❓ PREGUNTAS')" style="margin-top:8px">❓ Ver PREGUNTAS</button>
     </div>
 
+    <!-- MARCADOR -->
+    <div class="info-card" id="marcador-card">
+      <div class="info-card-title">🏆 Marcador</div>
+      <div id="marcador-content" style="margin-top:4px">Cargando...</div>
+    </div>
+
     <!-- MAPA -->
     <div class="info-card">
       <div class="info-card-title">🗺️ Mapa Budapest</div>
@@ -1398,6 +1404,70 @@ function renderInfo() {
   `;
 
   fetchRate();
+  renderMarcador();
+}
+
+// ═══════════════════════════════════════════════
+// MARCADOR DE PRUEBAS Y PREGUNTAS
+// ═══════════════════════════════════════════════
+const DESPEDIDOS_MARCADOR = [
+  { id: 'arroyo',   name: 'Arroyo',    emoji: '🎯' },
+  { id: 'jayala',   name: 'Juan Ayala', emoji: '🎯' },
+  { id: 'pocholo',  name: 'Pocholo',   emoji: '🎯' },
+];
+
+let _marcador = { arroyo:{p:0,q:0}, jayala:{p:0,q:0}, pocholo:{p:0,q:0} };
+
+function initMarcador() {
+  if (!firebase || !firebase.database) return;
+  firebase.database().ref('marcador').on('value', snap => {
+    const data = snap.val();
+    if (data) _marcador = data;
+    else _marcador = { arroyo:{p:0,q:0}, jayala:{p:0,q:0}, pocholo:{p:0,q:0} };
+    renderMarcador();
+  });
+}
+
+function renderMarcador() {
+  const el = document.getElementById('marcador-content');
+  if (!el) return;
+  el.innerHTML = DESPEDIDOS_MARCADOR.map(d => {
+    const s = _marcador[d.id] || {p:0,q:0};
+    const total = s.p + s.q;
+    const adminBtns = isAdmin ? `
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="marcadorPunto('${d.id}','p',1)"  style="${btnStyle('#00e676')}">+1 Prueba</button>
+        <button onclick="marcadorPunto('${d.id}','q',1)"  style="${btnStyle('#4da3ff')}">+1 Pregunta</button>
+        <button onclick="marcadorPunto('${d.id}','p',-1)" style="${btnStyle('rgba(255,59,48,.6)')}">-1</button>
+        <button onclick="marcadorPunto('${d.id}','q',-1)" style="${btnStyle('rgba(255,59,48,.6)')}">-1</button>
+      </div>` : '';
+    return `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em">${d.emoji} ${d.name}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold)">${total}</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:4px;font-size:.72rem;color:var(--muted)">
+          <span style="color:#00e676">⚡ Pruebas: ${s.p}</span>
+          <span style="color:#4da3ff">❓ Preguntas: ${s.q}</span>
+        </div>
+        ${adminBtns}
+      </div>`;
+  }).join('');
+}
+
+function btnStyle(color) {
+  return `padding:5px 10px;background:none;border:1px solid ${color};border-radius:8px;color:${color};font-size:.68rem;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:.06em`;
+}
+
+function marcadorPunto(id, tipo, delta) {
+  if (!isAdmin) return;
+  const s = _marcador[id] || {p:0,q:0};
+  s[tipo] = Math.max(0, (s[tipo]||0) + delta);
+  _marcador[id] = s;
+  if (firebase && firebase.database) {
+    firebase.database().ref('marcador/' + id).set(s);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1586,7 +1656,7 @@ function convertCurrency() {
 
 function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
