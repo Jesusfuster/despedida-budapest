@@ -1580,7 +1580,7 @@ function initGastos() {
   if (!firebase || !firebase.database) return;
   firebase.database().ref('gastos').on('value', snap => {
     _gastos = snap.val() || {};
-    renderGastos();
+    if (document.getElementById('banco-lista')) renderGastos();
   });
 }
 
@@ -1713,6 +1713,7 @@ function startDeleteGasto(id, btn) {
     if (!confirm('¿Eliminar este gasto?')) { cancelDeleteGasto(btn); return; }
     firebase.database().ref('gastos/' + id).remove();
     toast('🗑 Gasto eliminado');
+    renderGastos();
   }, 1500);
 }
 function cancelDeleteGasto(btn) {
