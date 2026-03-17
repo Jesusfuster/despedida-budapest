@@ -876,11 +876,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
       <select id="inp-name" style="width:100%;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:1rem;font-family:'Inter',sans-serif;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:18px;cursor:pointer">
         <option value="" disabled selected>¿Cómo te llaman?</option>
         <optgroup id="inp-name-group-main" label="── GRUPO ──"></optgroup>
-        <optgroup label="── DESPEDIDOS ──">
-          <option value="Arroyo">Arroyo</option>
-          <option value="Pocholo">Pocholo</option>
-          <option value="Juan Ayala">Juan Ayala</option>
-        </optgroup>
       </select>
     </div>
     <br>
@@ -902,9 +897,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   <div class="splash-divider" id="splash-hint">o si eres el despedido</div>
   <div id="despo-btns" style="display:flex;flex-direction:column;gap:10px;width:min(320px,100%)">
     <div style="font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;text-align:center">¿Eres uno de los despedidos?</div>
-    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🎯 ARROYO</button>
-    <button class="btn-despo-name" onclick="enterDespo('Juan Ayala')">🎯 JUAN AYALA</button>
-    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🎯 POCHOLO</button>
+    <button class="btn-despo-name" onclick="enterDespo('Arroyo')">🚬 ARROYO</button>
+    <button class="btn-despo-name" onclick="enterDespo('Juan Ayala')">🧕 JUAN AYALA</button>
+    <button class="btn-despo-name" onclick="enterDespo('Pocholo')">🐐 POCHOLO</button>
   </div>
 </div>
 
@@ -1471,9 +1466,9 @@ function renderInfo() {
 // MARCADOR DE PRUEBAS Y PREGUNTAS
 // ═══════════════════════════════════════════════
 const DESPEDIDOS_MARCADOR = [
-  { id:'arroyo',  name:'Arroyo',     emoji:'🎯' },
-  { id:'jayala',  name:'Juan Ayala', emoji:'🎯' },
-  { id:'pocholo', name:'Pocholo',    emoji:'🎯' },
+  { id:'arroyo',  name:'Arroyo',     emoji:'🚬' },
+  { id:'jayala',  name:'Juan Ayala', emoji:'🧕' },
+  { id:'pocholo', name:'Pocholo',    emoji:'🐐' },
 ];
 let _marcador = { arroyo:{p:0,q:0}, jayala:{p:0,q:0}, pocholo:{p:0,q:0} };
 
@@ -2112,7 +2107,10 @@ function initApp(){
   setConnDot('orange');
 }
 function startClock(){const tick=()=>{const el=document.getElementById('hdr-clock');if(el)el.textContent=fmtT(new Date());};tick();setInterval(tick,1000);}
-function registerSelf(){usersData[myId]={id:myId,name:myName,lat:null,lng:null,ts:Date.now(),color:ME_COLOR,emoji:myIsDespo?'👑':'🎯'};renderCrew();}
+function registerSelf(){
+  const emoji = myName==='Arroyo'?'🚬':myName==='Pocholo'?'🐐':myName==='Juan Ayala'?'🧕':'🎯';
+  usersData[myId]={id:myId,name:myName,lat:null,lng:null,ts:Date.now(),color:ME_COLOR,emoji};renderCrew();
+}
 
 // ════════════════════════════════════════════════════════
 // LEAFLET MAP
@@ -2192,7 +2190,7 @@ function initFirebase(){
     setConnDot('green');toast('🔗 Conectado con el grupo');
   }catch(e){console.warn('Firebase:',e);setConnDot('red');}
 }
-function broadcastPos(){if(!myLat||!window._fbLocRef||!locationSharing)return;try{window._fbLocRef.child(myId).set({name:myName,lat:myLat,lng:myLng,ts:Date.now(),color:ME_COLOR,emoji:myIsDespo?'👑':'🎯'});}catch(e){}}
+function broadcastPos(){if(!myLat||!window._fbLocRef||!locationSharing)return;const emoji=myName==='Arroyo'?'🚬':myName==='Pocholo'?'🐐':myName==='Juan Ayala'?'🧕':'🎯';try{window._fbLocRef.child(myId).set({name:myName,lat:myLat,lng:myLng,ts:Date.now(),color:ME_COLOR,emoji});}catch(e){}}
 function setConnDot(c){const d=document.getElementById('conn-dot');if(d)d.className='dot dot-'+c;}
 
 // ════════════════════════════════════════════════════════
@@ -2258,7 +2256,8 @@ function renderPlan(){
       const loc=item.loc?(myIsDespo?'📍 '+item.loc.split('·')[0].trim():'📍 '+item.loc):'';
       const lock=(state==='locked'&&!isAdmin)?'<div class="lock-ov"><span style="font-size:1.3rem">🔒</span><div class="lock-cd" data-id="'+item.id+'">SE ABRE EN '+fmtCd(ms)+'</div></div>':'';
       const badge=state==='active'?'<div class="badge b-active">▶ EN CURSO</div>':state==='unlocked'?'<div class="badge b-soon">PRÓXIMO</div>':'';
-      const dtag=myIsDespo?'<div class="despo-tag">👑 INVITADO ESPECIAL</div>':'';
+      const despoemoji = myName==='Arroyo'?'🚬':myName==='Pocholo'?'🐐':myName==='Juan Ayala'?'🧕':'👑';
+      const dtag=myIsDespo?`<div class="despo-tag">${despoemoji} INVITADO ESPECIAL</div>`:'';
       const cardClick=isAdmin?' onclick="openPlanEdit(\''+item.id+'\')" style="cursor:pointer"':'';
       html+='<div class="tl-item '+state+'"><div class="tl-left"><div class="tl-t">'+fmtT(item.time)+'</div><div class="tl-dot"></div><div class="tl-line"></div></div><div class="tl-card"'+cardClick+'>'+lock+dtag+badge+'<div class="card-emoji">'+item.emoji+'</div><div class="card-title">'+item.title+'</div><div class="card-desc">'+desc+'</div>'+(loc?'<div class="card-loc">'+loc+'</div>':'')+'</div></div>';
     });
