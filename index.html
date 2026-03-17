@@ -873,9 +873,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
   <div id="name-section">
     <div class="field">
       <label>Tu nombre</label>
-      <input id="inp-name" type="text" placeholder="¿Cómo te llaman?" maxlength="20"
-        autocomplete="off" autocorrect="off" autocapitalize="words"
-        onkeydown="if(event.key==='Enter') onNameEnter()"/>
+      <select id="inp-name" style="width:100%;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:1rem;font-family:'Inter',sans-serif;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:18px;cursor:pointer">
+        <option value="" disabled selected>¿Cómo te llaman?</option>
+        <optgroup id="inp-name-group-main" label="── GRUPO ──"></optgroup>
+        <optgroup label="── DESPEDIDOS ──">
+          <option value="Arroyo">Arroyo</option>
+          <option value="Pocholo">Pocholo</option>
+          <option value="Juan Ayala">Juan Ayala</option>
+        </optgroup>
+      </select>
     </div>
     <br>
     <button class="btn-primary" onclick="onNameEnter()">CONTINUAR →</button>
@@ -1172,7 +1178,12 @@ function showSection(which){
 
 function onNameEnter(){
   const name=(document.getElementById('inp-name').value||'').trim();
-  if(!name){const inp=document.getElementById('inp-name');inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),400);inp.focus();return;}
+  if(!name){
+    const sel=document.getElementById('inp-name');
+    sel.style.borderColor='var(--accent)';
+    setTimeout(()=>sel.style.borderColor='var(--border)',1500);
+    return;
+  }
   if(isDespedido(name)){launchApp(name,false,false);}else{showSection('pin');}
 }
 
@@ -1211,8 +1222,15 @@ function resetIdentity(){LS.del(LS_KEY);if(gpsWatchId!==null){try{navigator.geol
   try{const raw=LS.get(LS_KEY);if(!raw){showSection('name');return;}const d=JSON.parse(raw);if(!d||!d.name){showSection('name');return;}document.getElementById('inp-name').value=d.name;if(isDespedido(d.name)||d.pinOk){launchApp(d.name,!!d.pinOk,!!d.adminMode);}else{showSection('name');}}catch(e){showSection('name');}
 })();
 
-document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')onNameEnter();});
 document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='Enter')verifyPin();});
+
+// Poblar el select de nombres lo antes posible desde Firebase
+if (firebase && firebase.apps && firebase.apps.length) {
+  try { firebase.database().ref('gastosParticipantes').once('value', snap => { const d=snap.val(); if(d&&Array.isArray(d)){window._gastosParticipantes=d;actualizarSelectNombres();} }); } catch(e){}
+} else {
+  // Firebase aún no init — se poblará cuando initGastosParticipantes() se llame en initApp
+  setTimeout(()=>actualizarSelectNombres(), 2000);
+}
 
 // ════════════════════════════════════════════════════════
 // PLANNING DATA
@@ -1630,8 +1648,24 @@ function initGastosParticipantes() {
   if (!firebase||!firebase.database) return;
   firebase.database().ref('gastosParticipantes').on('value', snap => {
     const data = snap.val();
-    if (data && Array.isArray(data)) window._gastosParticipantes = data;
+    if (data && Array.isArray(data)) {
+      window._gastosParticipantes = data;
+    } else {
+      // Primera vez: inicializar con lista por defecto
+      window._gastosParticipantes = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
+        'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+        'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
+      firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
+    }
+    actualizarSelectNombres();
   });
+}
+
+function actualizarSelectNombres() {
+  const group = document.getElementById('inp-name-group-main');
+  if (!group) return;
+  const lista = window._gastosParticipantes || [];
+  group.innerHTML = lista.map(n=>`<option value="${n}">${n}</option>`).join('');
 }
 
 function toggleParticipante(btn) {
