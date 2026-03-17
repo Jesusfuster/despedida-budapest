@@ -1380,8 +1380,8 @@ function renderInfo() {
 }
 
 function initApp(){
-  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome(); initLocksFromFirebase(); loadNotionEditsFromFirebase();
-  startGPS(); renderPlan(); initFirebase();
+  planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
