@@ -1228,7 +1228,7 @@ document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='E
     firebase.database().ref('gastosParticipantes').once('value', snap => {
       const d = snap.val();
       const defaultList = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
-        'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+        'Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick',
         'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
       window._gastosParticipantes = (d && Array.isArray(d)) ? d : defaultList;
       if (!d) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
@@ -1237,7 +1237,7 @@ document.getElementById('inp-pin').addEventListener('keydown', e=>{if(e.key==='E
   } catch(e) {
     // Fallback con lista por defecto
     window._gastosParticipantes = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
-      'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+      'Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick',
       'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
     actualizarSelectNombres();
   }
@@ -1591,7 +1591,7 @@ function openAddGasto(editId) {
 
   // Lista de participantes: primero no-despedidos, luego despedidos al final
   const noDespos = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
-    'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+    'Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick',
     'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
   const despos = ['Arroyo','Pocholo','Juan Ayala'];
   // Coger lista guardada en Firebase o usar la por defecto
@@ -1637,7 +1637,7 @@ function eliminarPersonaGasto(e, nombre) {
   e.stopPropagation();
   if (!isAdmin) return;
   if (!confirm('¿Eliminar a ' + nombre + ' de la lista?')) return;
-  window._gastosParticipantes = (window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']]).filter(p=>p!==nombre);
+  window._gastosParticipantes = (window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']]).filter(p=>p!==nombre);
   if (firebase&&firebase.database) firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
   openAddGasto(document.querySelector('#gasto-modal input#g-desc') ? '_reload' : null);
 }
@@ -1664,7 +1664,7 @@ function initGastosParticipantes() {
     } else {
       // Primera vez: inicializar con lista por defecto
       window._gastosParticipantes = ['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor',
-        'Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick',
+        'Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick',
         'Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito'];
       firebase.database().ref('gastosParticipantes').set(window._gastosParticipantes);
     }
@@ -1697,7 +1697,7 @@ function guardarGasto(editId) {
   // Vacío = todos excepto despedidos
   const despos = ['Arroyo','Pocholo','Juan Ayala'];
   if (participantes.length === 0) {
-    const todosBase = window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Jayala','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']];
+    const todosBase = window._gastosParticipantes || [...['Jesus','Sarmi','Galindo','Ale','Fer','Jorge','Manzur','Rafa','Tim','Richi','Victor','Primo Jay','Primo Kike','Adri','Juan','Adrian','Bazan','Mick','Julio','Kino','Jose','Cabeza','Pablo','Joachi','Max','Felipe','Luis','Travol','Aynat','Mauro','Sito']];
     participantes = todosBase.filter(p => !despos.includes(p));
   }
   const id = editId && editId !== '_reload' ? editId : ('g_' + Date.now());
