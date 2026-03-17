@@ -2115,6 +2115,20 @@ function openNoAdminPopup() {
   let m = document.getElementById('noadmin-popup');
   if (!m) { m=document.createElement('div'); m.id='noadmin-popup'; m.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);padding:20px'; document.body.appendChild(m); }
   m.innerHTML = `<div style="background:var(--surface);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border)">
+    <div style="font-size:3rem;margin-bottom:12px">🤌</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.08em;background:linear-gradient(90deg,#bf5af2,#ff375f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px">PUES AGARRAME ESTA</div>
+    <div style="font-size:.82rem;color:var(--text);line-height:1.7;margin-bottom:16px;text-align:left;font-style:italic">"Pues agarrame esta, no sé qué plan llevarás tú."</div>
+    <div style="font-size:.7rem;color:var(--muted);margin-bottom:24px">— Aristóteles</div>
+    <button onclick="document.getElementById('noadmin-popup').style.display='none'" style="width:100%;padding:14px;background:linear-gradient(90deg,#bf5af2,#ff375f);border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;cursor:pointer">ENTENDIDO 🤌</button>
+  </div>`;
+  m.style.display='flex';
+  m.onclick = e => { if(e.target===m) m.style.display='none'; };
+}
+
+function openNoAdminPopup() {
+  let m = document.getElementById('noadmin-popup');
+  if (!m) { m=document.createElement('div'); m.id='noadmin-popup'; m.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);padding:20px'; document.body.appendChild(m); }
+  m.innerHTML = `<div style="background:var(--surface);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;border:1px solid var(--border)">
     <div style="font-size:2.5rem;margin-bottom:12px">🤌</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.08em;background:linear-gradient(90deg,#bf5af2,#ff375f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px">PUES AGARRAME ESTA</div>
     <div style="font-size:.82rem;color:var(--text);line-height:1.7;margin-bottom:16px;font-style:italic">"Pues agarrame esta, no sé qué plan llevarás tú."</div>
