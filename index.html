@@ -1499,11 +1499,15 @@ function loadCustomPlansFromFirebase() {
 
 // ═══════════════════════════════════════════════
 function showAdminControls() {
-  if (!isAdmin) return;
   const btnLock = document.getElementById('btn-lockapp');
-  if (btnLock) btnLock.style.display = 'block';
   const btnPlan = document.getElementById('btn-add-plan');
-  if (btnPlan) { btnPlan.style.display = 'flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
+  if (isAdmin) {
+    if (btnLock) btnLock.style.display = 'block';
+    if (btnPlan) { btnPlan.style.display = 'flex'; btnPlan.style.alignItems='center'; btnPlan.style.justifyContent='center'; }
+  } else {
+    if (btnLock) btnLock.style.display = 'none';
+    if (btnPlan) btnPlan.style.display = 'none';
+  }
 }
 
 function initAppLock() {
