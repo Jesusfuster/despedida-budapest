@@ -3176,6 +3176,7 @@ function _pruebas_html() {
         <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
           <button onclick="editNotionItem('prueba','${p.n}')" style="background:rgba(30,111,255,.15);border:1px solid var(--accent);border-radius:8px;color:var(--accent2);font-size:.7rem;padding:4px 8px;cursor:pointer">✏️</button>
           <button onclick="toggleLockItem('prueba','${p.n}')" style="background:${locked?'rgba(255,60,60,.15)':'rgba(255,215,0,.1)'};border:1px solid ${locked?'rgba(255,60,60,.4)':'rgba(255,215,0,.3)'};border-radius:8px;color:${locked?'#ff6b6b':'var(--gold)'};font-size:.7rem;padding:4px 8px;cursor:pointer">${locked?'🔓':'🔒'}</button>
+          <button onclick="deletePrueba('${p.n}')" style="background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);border-radius:8px;color:#ff6b6b;font-size:.7rem;padding:4px 8px;cursor:pointer">🗑</button>
         </div>` : '';
       return `<div style="background:var(--surface);border:1px solid ${locked?'rgba(255,60,60,.3)':'var(--border)'};border-radius:12px;padding:14px;opacity:${locked?'0.45':'1'}">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:${locked?'0':'6px'}">
@@ -3235,7 +3236,7 @@ function _preguntas_html() {
         ${respuestasHtml}
       </div>`;
     }).join('') +
-    (isAdmin ? `<button onclick="addNuevaPrueba()" style="width:100%;padding:12px;background:rgba(0,230,118,.1);border:1px dashed rgba(0,230,118,.4);border-radius:10px;color:#00e676;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.1em;cursor:pointer;margin-top:4px">+ AÑADIR PRUEBA</button>` : '') +
+    (isAdmin ? `<button onclick="addNewPreguntaNew()" style="width:100%;padding:12px;background:rgba(30,111,255,.1);border:1px dashed rgba(30,111,255,.4);border-radius:10px;color:var(--accent2);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.1em;cursor:pointer;margin-top:4px">+ AÑADIR PREGUNTA</button>` : '') +
     '</div>';
 }
 
