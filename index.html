@@ -2860,7 +2860,7 @@ function openNotionModal(type, title) {
       addBtn.id = 'notion-add-btn';
       addBtn.style.cssText = 'width:calc(100% - 28px);margin:10px 14px;padding:12px;background:rgba(30,111,255,.15);border:1px dashed var(--accent);border-radius:10px;color:var(--accent2);font-family:\'Bebas Neue\',sans-serif;font-size:.9rem;letter-spacing:.08em;cursor:pointer;display:block';
       addBtn.textContent = '+ AÑADIR NUEVA PREGUNTA';
-      addBtn.onclick = () => addNewPregunta();
+      addBtn.onclick = () => addNewPreguntaNew();
       m.appendChild(addBtn);
     }
     addBtn.style.display = 'block';
@@ -3056,8 +3056,8 @@ function _getPruebasData() {
     {n:'22',e:'🏴‍☠️', t:'Saludo pirata (barco)', d:'El día del barco, si pasáis cerca de otro barco de turistas, los novios deben gritar un saludo pirata. Si os responden: elegís a 5 del grupo para beber media cerveza. Si os ignoran: bebéis los novios.'},
   ].map(p => {
     const edit = window._notionEdits && window._notionEdits['prueba'+p.n];
-    return edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
-  });
+    return edit && edit.deleted ? null : edit ? {...p, t: edit.t||p.t, d: edit.d||p.d} : p;
+  }).filter(Boolean).concat(Object.values(window._pruebasCustom||{}));
 }
 
 function _getPreguntasData() {
