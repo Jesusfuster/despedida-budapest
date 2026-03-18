@@ -965,6 +965,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
       <!-- MARCADOR -->
       <div class="info-card" id="marcador-card">
         <div class="info-card-title">🏆 Marcador</div>
+      ${isAdmin ? `<button onclick="resetMarcador()" style="float:right;margin-top:-28px;padding:4px 10px;background:rgba(255,59,48,.1);border:1px solid rgba(255,59,48,.3);border-radius:6px;color:#ff6b6b;font-size:.65rem;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:.06em">🔄 RESET</button>` : ''}
         <div id="marcador-content" style="margin-top:4px">Cargando...</div>
       </div>
 
@@ -1696,20 +1697,6 @@ function ganadoPrueba(despoId, pruebaN) {
   }
   const body = document.getElementById('notion-modal-body');
   if (body) body.innerHTML = _pruebas_html();
-}
-
-function initAciertosPregunta() {
-  if (!firebase||!firebase.database) return;
-  firebase.database().ref('aciertosPregunta').on('value', snap => {
-    window._aciertosPregunta = snap.val() || {};
-  });
-}
-
-function initGanadosPrueba() {
-  if (!firebase||!firebase.database) return;
-  firebase.database().ref('ganadosPrueba').on('value', snap => {
-    window._ganadosPrueba = snap.val() || {};
-  });
 }
 
 function aciertoPregunta(despoId, preguntaId) {
