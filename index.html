@@ -3295,8 +3295,8 @@ function _pruebas_html() {
             const ganado = window._ganadosPrueba && window._ganadosPrueba[p.n] === id;
             const hayGanador = window._ganadosPrueba && window._ganadosPrueba[p.n];
             return ganado
-              ? `<div style="flex:1;padding:5px;background:${color}33;border:2px solid ${color};border-radius:6px;color:${color};font-size:.72rem;text-align:center;font-weight:700">🏆 ${label}</div>`
-              : `<button onclick="ganadoPrueba('${id}','${p.n}')" ${hayGanador?'disabled style="flex:1;padding:5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.2);font-size:.72rem;cursor:not-allowed"':'style="flex:1;padding:5px;background:'+color+'18;border:1px solid '+color+'55;border-radius:6px;color:'+color+';font-size:.72rem;cursor:pointer"'}>${label}</button>`;
+              ? `<button onclick="ganadoPrueba('${id}','${p.n}')" style="flex:1;padding:5px;background:${color}33;border:2px solid ${color};border-radius:6px;color:${color};font-size:.72rem;cursor:pointer;font-weight:700">🏆 ${label}</button>`
+              : `<button onclick="ganadoPrueba('${id}','${p.n}')" style="flex:1;padding:5px;background:${color}18;border:1px solid ${color}55;border-radius:6px;color:${color};font-size:.72rem;cursor:pointer">${label}</button>`;
           }).join('')}
         </div>`:''}
         `}
