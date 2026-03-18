@@ -1657,17 +1657,45 @@ function marcadorPunto(id, tipo, delta) {
   if (firebase && firebase.database) firebase.database().ref('marcador/' + id).set(s);
 }
 
-function aciertoPregunta(despoId, preguntaId, despoKey) {
+function aciertoPregunta(despoId, preguntaId) {
   if (!isAdmin) return;
+  const key = preguntaId + '_' + despoId;
+  window._aciertosPregunta = window._aciertosPregunta || {};
+  if (window._aciertosPregunta[key]) return; // ya acertado
+  window._aciertosPregunta[key] = true;
+  if (firebase&&firebase.database) firebase.database().ref('aciertosPregunta/'+key).set(true);
   marcadorPunto(despoId, 'q', 1);
+  // Refrescar el modal si está abierto
+  const body = document.getElementById('notion-modal-body');
+  if (body) body.innerHTML = _preguntas_html();
   toast('✅ Punto pregunta → ' + despoId);
+}
+
+function initAciertosPregunta() {
+  if (!firebase||!firebase.database) return;
+  firebase.database().ref('aciertosPregunta').on('value', snap => {
+    window._aciertosPregunta = snap.val() || {};
+  });
 }
 
 function ganadoPrueba(despoId, pruebaN) {
   if (!isAdmin) return;
+  window._ganadosPrueba = window._ganadosPrueba || {};
+  if (window._ganadosPrueba[pruebaN]) return; // ya tiene ganador
+  window._ganadosPrueba[pruebaN] = despoId;
+  if (firebase&&firebase.database) firebase.database().ref('ganadosPrueba/'+pruebaN).set(despoId);
   marcadorPunto(despoId, 'p', 1);
+  const body = document.getElementById('notion-modal-body');
+  if (body) body.innerHTML = _pruebas_html();
   const nombres = { arroyo:'Arroyo', jayala:'Juan Ayala', pocholo:'Pocholo' };
   toast('🏆 Prueba ' + pruebaN + ' → ' + (nombres[despoId]||despoId));
+}
+
+function initGanadosPrueba() {
+  if (!firebase||!firebase.database) return;
+  firebase.database().ref('ganadosPrueba').on('value', snap => {
+    window._ganadosPrueba = snap.val() || {};
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -2281,7 +2309,7 @@ function initApp(){
   planItems=buildPlan(); startClock(); initMap(); registerSelf(); renderInfo(); maybeShowWelcome();
   // Arrancar en pestaña Info
   switchTab('info');
-  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initGastos(); initGastosParticipantes(); initPropuestas(); initApartamento(); initCustomPruebas(); initCustomPreguntas();
+  startGPS(); renderPlan(); initFirebase(); initLocksFromFirebase(); loadNotionEditsFromFirebase(); initAppLock(); loadCustomPlansFromFirebase(); initMarcador(); initGastos(); initGastosParticipantes(); initPropuestas(); initApartamento(); initCustomPruebas(); initCustomPreguntas(); initAciertosPregunta(); initGanadosPrueba();
   setInterval(renderCrew,8000); setInterval(renderPlan,60000); setInterval(broadcastPos,15000);
   setConnDot('orange');
 }
@@ -3207,9 +3235,13 @@ function _pruebas_html() {
         </div>
         ${locked&&!isAdmin?'':` <div style="font-size:.78rem;color:var(--text);line-height:1.5">${p.d}</div>
         ${isAdmin?`<div style="display:flex;gap:6px;margin-top:8px">
-          <button onclick="ganadoPrueba('arroyo','${p.n}')" style="flex:1;padding:5px;background:rgba(77,163,255,.15);border:1px solid rgba(77,163,255,.4);border-radius:6px;color:#4da3ff;font-size:.72rem;cursor:pointer">🚬 Arroyo</button>
-          <button onclick="ganadoPrueba('jayala','${p.n}')" style="flex:1;padding:5px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:6px;color:#00e676;font-size:.72rem;cursor:pointer">🧕 Juan</button>
-          <button onclick="ganadoPrueba('pocholo','${p.n}')" style="flex:1;padding:5px;background:rgba(191,90,242,.15);border:1px solid rgba(191,90,242,.4);border-radius:6px;color:#bf5af2;font-size:.72rem;cursor:pointer">🐐 Pocholo</button>
+          ${[['arroyo','#4da3ff','🚬 Arroyo'],['jayala','#00e676','🧕 Juan'],['pocholo','#bf5af2','🐐 Pocholo']].map(([id,color,label])=>{
+            const ganado = window._ganadosPrueba && window._ganadosPrueba[p.n] === id;
+            const hayGanador = window._ganadosPrueba && window._ganadosPrueba[p.n];
+            return ganado
+              ? `<div style="flex:1;padding:5px;background:${color}33;border:2px solid ${color};border-radius:6px;color:${color};font-size:.72rem;text-align:center;font-weight:700">🏆 ${label}</div>`
+              : `<button onclick="ganadoPrueba('${id}','${p.n}')" ${hayGanador?'disabled style="flex:1;padding:5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.2);font-size:.72rem;cursor:not-allowed"':'style="flex:1;padding:5px;background:'+color+'18;border:1px solid '+color+'55;border-radius:6px;color:'+color+';font-size:.72rem;cursor:pointer"'}>${label}</button>`;
+          }).join('')}
         </div>`:''}
         `}
       </div>`;
@@ -3241,7 +3273,10 @@ function _preguntas_html() {
       const respuestasHtml = locked && !isAdmin ? '' : aplicables.map(p => {
         const rDespo = q[p.despo] ?? '';
         const rNovia = q[p.novia] ?? '';
-        const aciertoBtn = isAdmin ? `<button onclick="aciertoPregunta('${p.despo}','${q.id}','${p.despo}')" style="margin-top:6px;padding:4px 10px;background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.4);border-radius:6px;color:#00e676;font-size:.68rem;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:.06em">✅ ACIERTO</button>` : '';
+        const yaAcertado = window._aciertosPregunta && window._aciertosPregunta[q.id+'_'+p.despo];
+        const aciertoBtn = isAdmin ? (yaAcertado
+          ? `<div style="margin-top:6px;padding:4px 10px;background:rgba(0,230,118,.25);border:1px solid rgba(0,230,118,.6);border-radius:6px;color:#00e676;font-size:.68rem;font-family:'Bebas Neue',sans-serif;display:inline-block">✅ ACERTADO</div>`
+          : `<button onclick="aciertoPregunta('${p.despo}','${q.id}')" style="margin-top:6px;padding:4px 10px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:6px;color:#00e676;font-size:.68rem;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:.06em">✅ ACIERTO</button>`) : '';
         return `<div style="background:var(--bg);border:1px solid ${p.color}44;border-radius:8px;padding:8px 10px;margin-bottom:6px">
           <div style="font-size:.68rem;font-family:'Bebas Neue',sans-serif;color:${p.color};letter-spacing:.08em;margin-bottom:6px">${p.despoName} & ${p.noviaName}</div>
           <div style="display:flex;flex-direction:column;gap:4px">
