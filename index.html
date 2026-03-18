@@ -2893,7 +2893,7 @@ function deletePreguntaNew(id) {
 function editPreguntaNew(id) {
   if(!isAdmin) return;
   const qs = _getPreguntasData();
-  const q = qs.find(x=>x.id===id) || {};
+  const q = qs.find(x=>x.id===id) || (window._notionEdits && window._notionEdits['pregunta'+id]) || {};
   let m = document.getElementById('edit-notion-modal');
   if(!m) { m=document.createElement('div'); m.id='edit-notion-modal'; m.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;padding:0'; document.body.appendChild(m); }
   const parejas = [
@@ -3149,11 +3149,22 @@ function _getPreguntasData() {
       pocholo:'', carlota:'¡De Pocholo Martínez Bordiú! Cuando le imitaba 😅',
       soloDespo:'pocholo'},
   ];
-  // Aplicar edits de Firebase
+  // Aplicar edits de Firebase y añadir preguntas nuevas
+  const edits = window._notionEdits || {};
+  const baseIds = new Set(base.map(q=>q.id));
+  // Preguntas nuevas (no están en base)
+  const nuevas = Object.entries(edits)
+    .filter(([k,v]) => k.startsWith('preguntap') && !v.deleted)
+    .map(([k,v]) => ({
+      id: k.replace('pregunta',''),
+      q: v.q||'', arroyo: v.arroyo||'', eva: v.eva||'',
+      juan: v.juan||'', jaz: v.jaz||'',
+      pocholo: v.pocholo||'', carlota: v.carlota||''
+    }));
   return base.map(q => {
-    const edit = window._notionEdits && window._notionEdits['pregunta'+q.id];
-    return edit ? {...q, ...edit} : q;
-  }).filter(q => !q.deleted);
+    const edit = edits['pregunta'+q.id];
+    return edit && edit.deleted ? null : edit ? {...q, ...edit} : q;
+  }).filter(Boolean).concat(nuevas);
 }
 function _pruebas_html() {
   const pruebas = _getPruebasData();
